@@ -1,0 +1,122 @@
+#
+# Filename:    Makefile-Only-MAIL
+# Author:      Shahid Alam
+# Dated:       October 24, 2015
+# Decription:  Makefile for the tool DroidNative-Only-MAIL
+#
+
+ROOT  := source
+
+# Directories
+BIN_DIR        := bin
+LIBS_DIR       := lib
+INCLUDES_DIR   := $(ROOT)/include
+CFG_DIR        := $(ROOT)/cfg
+DISASM_X86_DIR := $(ROOT)/disasmX86
+ELF_DIR        := $(ROOT)/elf
+PE_DIR         := $(ROOT)/pe
+MAIL_DIR       := $(ROOT)/mail
+ML_DIR         := $(ROOT)/ml
+ISOMORPH_DIR   := $(ROOT)/isomorph
+PARSER_DIR     := $(ROOT)/parser
+UTIL_DIR       := $(ROOT)/util
+MAIN_DIR       := $(ROOT)
+
+CPP      := g++
+CC       := gcc
+LD       := g++
+AR       := ar
+RM       := rm -f
+CPPFLAGS := -D __PRINT_ONLY_MAIL__ -D __PRINT_MAIL__ -D __GRAPH_MATCHING__ -D __SHRINKING_ENABLED__ -Wno-deprecated -Wno-write-strings -Ofast -ansi -fpermissive -I$(INCLUDES_DIR)
+CFLAGS   := -Wno-deprecated -Wno-write-strings -Ofast -ansi -I$(INCLUDES_DIR)
+LDFLAGS  := -Ofast -ansi -s -static
+LIBS     := -L$(LIBS_DIR) -lcapstone
+
+echo_cmd = @printf   "   %-15s %s\n" "$(1)" "$(2)"
+
+usage:
+	@echo ""
+	@echo "Makefile for the tool DroidNative-Only-MAIL."
+	@echo ""
+	@echo "Usage:"
+	@echo "	make all        # Compile everything"
+	@echo "	make clean      # Remove all object files"
+	@echo "	make clean_all  # Remove all object files and binary"
+	@echo ""
+
+SRCS_C =	$(DISASM_X86_DIR)/decoder.c \
+			$(DISASM_X86_DIR)/distorm.c \
+			$(DISASM_X86_DIR)/instructions.c \
+			$(DISASM_X86_DIR)/insts.c \
+			$(DISASM_X86_DIR)/mnemonics.c \
+			$(DISASM_X86_DIR)/operands.c \
+			$(DISASM_X86_DIR)/prefix.c \
+			$(DISASM_X86_DIR)/textdefs.c \
+			$(DISASM_X86_DIR)/wstring.c
+
+SRCS_CPP =	$(UTIL_DIR)/util.cpp \
+			$(CFG_DIR)/cfg.cpp \
+			$(ELF_DIR)/dynamicTableELF.cpp \
+			$(ELF_DIR)/ehFrameELF.cpp \
+			$(ELF_DIR)/elf.cpp \
+			$(ELF_DIR)/gccExceptTableELF.cpp \
+			$(ELF_DIR)/programHeader.cpp \
+			$(ELF_DIR)/relocationsELF.cpp \
+			$(ELF_DIR)/sectionHeaderELF.cpp \
+			$(ELF_DIR)/symbolTableELF.cpp \
+			$(PE_DIR)/pe.cpp \
+			$(PE_DIR)/sectionHeaderPE.cpp \
+			$(ISOMORPH_DIR)/argedit.cpp \
+			$(ISOMORPH_DIR)/argloader.cpp \
+			$(ISOMORPH_DIR)/argraph.cpp \
+			$(ISOMORPH_DIR)/error.cpp \
+			$(ISOMORPH_DIR)/gene.cpp \
+			$(ISOMORPH_DIR)/gene_mesh.cpp \
+			$(ISOMORPH_DIR)/isomorph.cpp \
+			$(ISOMORPH_DIR)/match.cpp \
+			$(ISOMORPH_DIR)/sd_state.cpp \
+			$(ISOMORPH_DIR)/sortnodes.cpp \
+			$(ISOMORPH_DIR)/ull_state.cpp \
+			$(ISOMORPH_DIR)/ull_sub_state.cpp \
+			$(ISOMORPH_DIR)/vf_mono_state.cpp \
+			$(ISOMORPH_DIR)/vf_state.cpp \
+			$(ISOMORPH_DIR)/vf_sub_state.cpp \
+			$(ISOMORPH_DIR)/vf2_mono_state.cpp \
+			$(ISOMORPH_DIR)/vf2_state.cpp \
+			$(ISOMORPH_DIR)/vf2_sub_state.cpp \
+			$(ISOMORPH_DIR)/xsubgraph.cpp \
+			$(MAIL_DIR)/armAsmToMAIL.cpp \
+			$(MAIL_DIR)/mail.cpp \
+			$(MAIL_DIR)/signature.cpp \
+			$(MAIL_DIR)/x86AsmToMAIL.cpp \
+			$(ML_DIR)/ml.cpp \
+			$(ML_DIR)/similarityDetector.cpp \
+			$(PARSER_DIR)/expression.cpp \
+			$(PARSER_DIR)/instruction.cpp \
+			$(PARSER_DIR)/operator.cpp \
+			$(PARSER_DIR)/parser.cpp \
+			$(MAIN_DIR)/main.cpp
+
+all: $(SRCS_C) $(SRCS_CPP) DroidNative-Only-MAIL.exe
+
+OBJS     := $(SRCS_C:.c=.o) $(SRCS_CPP:.cpp=.o)
+
+DroidNative-Only-MAIL.exe: $(OBJS)
+	@printf   "   LD              $(BIN_DIR)/$@\n"
+	$(LD) $(LDFLAGS) $(OBJS) $(LIBS) -o $(BIN_DIR)/$@
+
+.cpp.o:
+	$(call echo_cmd,CPP    ,$@)
+	$(CPP) $(CPPFLAGS) -c $< -o $@
+
+.c.o:
+	$(call echo_cmd,CC    ,$@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+clean:
+	@printf   "   RM \n $(OBJS)\n"
+	$(RM) $(OBJS)
+
+clean_all:
+	@printf   "   RM \n $(OBJS) $(BIN_DIR)/DroidNative-Only-MAIL.exe\n"
+	$(RM) $(OBJS) $(BIN_DIR)/DroidNative-Only-MAIL.exe
