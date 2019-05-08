@@ -171,7 +171,7 @@ for (my $i = 0; $i < $N; $i++)
 #
 # Checking the randomness of the locations.
 #
-for (my $s = 0; $s < $BENIGN_FILE_SIZE; $s++)
+for (my $s = 0; $s < $MALWARE_FILE_SIZE; $s++)
 {
 	if ($already_selected[$s] == 0)
 	{
