@@ -7,3 +7,11 @@
 
 # executables
 *.exe
+
+# input, intermediate and result files
+*.txt
+benign_samples*
+malware_samples*
+virus_samples*
+files_to_check*
+results*
