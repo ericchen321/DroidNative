@@ -282,7 +282,7 @@ if ($BUILD_ROC == 1)
 	# It runs it completely for COUNT iterations to create an ROC.
 	# Generate the result files (results_xxx_xx.txt) for buidling the ROC.
 	#
-	my $COUNT = 2;
+	my $COUNT = 100;
 	my $jump = 1;
 	my $STARTING = 1;
 	for (my $count = $STARTING; $count <= $COUNT; $count += $jump)
