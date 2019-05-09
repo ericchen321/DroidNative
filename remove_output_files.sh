@@ -2,5 +2,6 @@
 
 rm bin/benign_samples*
 rm bin/malware_samples*
-rm bin/*.ACFG
+rm *.dat
+rm *.dat.original
 rm bin/*.txt
