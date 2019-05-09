@@ -36,45 +36,45 @@ For running DroidNative change to the run DIR and then to the respective sub-DIR
 
 1. run-cross-validation_ACFG.pl
 - USAGE:
-```` 
-run-cross-validation.pl <max_threads> <n> <file_name_benign_samples> <file_name_malware_samples> <file_name_DroidNative> <build_roc=0/1> <THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING> 
-````
+  ```` 
+  run-cross-validation.pl <max_threads> <n> <file_name_benign_samples> <file_name_malware_samples> <file_name_DroidNative> <build_roc=0/1> <THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING> 
+  ````
 build_roc = 0 Just run once
 build_roc = 1 Run more than once, from THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING - 100 for building ROC
 - EXAMPLE:
-```` 
-run-cross-validation.pl 1 10 benign_samples.txt malware_samples.txt DroidNative.exe 1 1 
-````
+  ```` 
+  run-cross-validation.pl 1 10 benign_samples.txt malware_samples.txt DroidNative.exe 1 1 
+  ````
 - NOTE:
 - DroidNative saves the training data to a file ```` <file_name_malware_samples>.training.dat ```` to save time. Next time when it is run with the same file name ```` <file_name_malware_samples> ```` it will try to load the saved training data from the file ```` <file_name_malware_samples>.training.dat ```` and if the file is not present only then it's going to train the data. DroidNative distinguishes the saved training data by the filename. If your training data does not change, then use the same file name that was used when building the training data. But if your training data has changed then you need to use a file with different name.
 For the input files, each line must end with the new-line character.
 
 2. run-cross-validation_SWOD.pl
 - USAGE:
-```` 
-run-cross-validation.pl <n> <file_name_benign_samples> <file_name_malware_samples> <file_name_DroidNative> <find_best_value=0/1/2> <VWOD> <HWOD> <VSD> <HSD> 
-````
+  ```` 
+  run-cross-validation.pl <n> <file_name_benign_samples> <file_name_malware_samples> <file_name_DroidNative> <find_best_value=0/1/2> <VWOD> <HWOD> <VSD> <HSD> 
+  ````
 find_best_value = 0 for generating ROC,
 find_best_value = 1 for one run,
 find_best_value = 2 For finding the best values.
 - EXAMPLE:
-```` 
-run-cross-validation.pl 10 benign_samples.txt malware_samples.txt DroidNative.exe 1 3 50 25 50 
-````
+  ```` 
+  run-cross-validation.pl 10 benign_samples.txt malware_samples.txt DroidNative.exe 1 3 50 25 50 
+  ````
 - NOTE:
 For the input files, each line must end with the new-line character.
 
 3. build-ROC.pl
 - USAGE:
-```` 
-build-ROC.pl <path to result files> <n> <range> 
-````
+  ```` 
+  build-ROC.pl <path to result files> <n> <range> 
+  ````
 
 4. getTime.pl
 - USAGE:
-```` 
-getTime.pl <path to result files> <n> <range> 
-````
+  ```` 
+  getTime.pl <path to result files> <n> <range> 
+  ````
 
 For example, to carry out 5-fold cross validation with the dataset of 40 malware and 40 benign samples using ACFG technique:
 ````
@@ -89,6 +89,22 @@ $ getTime.pl ./ 5 1-100
 ````
 For any questions or feedback, please contact alam_shahid@yahoo.com.
 
+
+## Miscellanous:
+
+Two scripts are helpful for managing output files from training:
+
+1. ``` move_output_files.sh ``` moves output files from ``` bin/ ```to another folder.
+- USAGE:
+  ```` 
+  ./move_output_files.sh ~/training_set_0_result/ 
+  ````
+
+2. ``` remove_output_files.sh ``` deletes all output files from ``` bin/ ```.
+- USAGE:
+  ``` 
+  ./remove_output_files.sh 
+  ``` 
 
 ## REFERENCES:
 [1] MAIL: Malware Analysis Intermediate Language - A Step Towards Automating and Optimizing Malware Detection. In Proceedings of the Sixth ACM International Conference on Security of Information and Networks, SIN 2013.
