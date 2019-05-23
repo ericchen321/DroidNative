@@ -43,7 +43,7 @@ ML::ML(uint32_t max_threads, double THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING)
 	MANAGER_THREAD_COUNT = 0;
 	THREAD_COUNT = 0;
 	THREAD_POOL_COUNT = 0;
-	numCPU = 1;
+	numCPU = 20;
 #ifdef __WIN32__
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo(&sysinfo);
