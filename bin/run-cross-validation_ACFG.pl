@@ -282,16 +282,32 @@ if ($BUILD_ROC == 1)
 	# It runs it completely for COUNT iterations to create an ROC.
 	# Generate the result files (results_xxx_xx.txt) for buidling the ROC.
 	#
-	my $COUNT = 100;
+	my $COUNT = 2;
 	my $jump = 1;
 	my $STARTING = 1;
 	for (my $count = $STARTING; $count <= $COUNT; $count += $jump)
 	{
 		$THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING = $count;
-		for (my $i = 0; $i < $N; $i++)
-		{
-			my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt > results_%03d_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $count, $i);
-			print "\nRunning $cmd\n";
+		# run two training processes at a time
+		for (my $i=0; $i < $N / 2; $i++){
+			my $pid = fork();
+			if ($pid == 0) {
+				my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt > results_%03d_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, ($i*2+1), ($i*2+1), $count, ($i*2+1));
+				print "\nChild Running $cmd\n";
+				system ($cmd);
+				exit;
+			}
+			else{
+				my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt > results_%03d_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, ($i*2), ($i*2), $count, ($i*2));
+				print "\nParent Running $cmd\n";
+				system ($cmd);
+				wait();
+			}
+		}
+		# extra training if n is odd
+		if($N / 2 == 1){
+			my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt > results_%03d_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $N, $N, $count, $N);
+			print "\nParent Running $cmd\n";
 			system ($cmd);
 		}
 	}
