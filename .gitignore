@@ -4,6 +4,7 @@
 #object files
 *.obj
 *.o
+*.a
 
 # executables
 *.exe
@@ -15,3 +16,6 @@ malware_samples*
 virus_samples*
 files_to_check*
 results*
+
+# other stuff
+lib/capstone-3.0/make.sh
