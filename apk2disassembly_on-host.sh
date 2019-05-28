@@ -23,14 +23,12 @@ convert () {
 		exit 1
 	fi
 
-	# FIXME: now assume each apk has only one dex file; should add ability to
-	# handle multiple dex files later
 	for APK in  $(ls $in_dir/*.apk |sort -R); do
-		mkdir -p ${PWD}/$temp/
-		unzip -o ${APK} classes.dex -d ${PWD}/$temp/
-        ${AOSP_DIR}/out/host/linux-x86/bin/dex2oat --runtime-arg -classpath --runtime-arg ${PWD}/$temp/classes.dex --instruction-set=arm --runtime-arg -Xrelocate --host --boot-image=$BOOT_IMAGE --dex-file=${PWD}/$temp/classes.dex --oat-file=${PWD}/$temp/$(basename "$APK" .apk).dex.oat
-        ${AOSP_DIR}/out/host/linux-x86/bin/oatdump --oat-file=${PWD}/$temp/$(basename "$APK" .apk).dex.oat --output=$out_dir/$(basename "$APK" .apk).dex.oat.txt
-        rm -rf ${PWD}/$temp/
+		cp $in_dir/$(basename "$APK" ) ./$(basename "$APK" )
+        ${AOSP_DIR}/out/host/linux-x86/bin/dex2oat --runtime-arg -classpath --runtime-arg $(basename "$APK" ) --instruction-set=arm --runtime-arg -Xrelocate --host --boot-image=$BOOT_IMAGE --dex-file=$(basename "$APK" ) --oat-file=$(basename "$APK" ).dex
+        ${AOSP_DIR}/out/host/linux-x86/bin/oatdump --oat-file=$(basename "$APK" ).dex --output=$out_dir/$(basename "$APK" ).dex.txt
+		rm $(basename "$APK" )
+		rm $(basename "$APK" ).dex
 	done
 }
 
@@ -49,5 +47,6 @@ export ANDROID_DATA="${AOSP_DIR}/out/host/datadir/dalvik-cache/x86_64"
 export ANDROID_ROOT="${AOSP_DIR}/out/host/linux-x86"
 BOOT_IMAGE="${AOSP_DIR}/out/target/product/generic/system/framework/boot.art"
 mkdir -p $ANDROID_DATA
+cd $AOSP_DIR
 convert "malware"
 convert "benign"
