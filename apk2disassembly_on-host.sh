@@ -26,7 +26,7 @@ convert () {
 	for APK in  $(ls $in_dir/*.apk |sort -R); do
 		cp $in_dir/$(basename "$APK" ) ./$(basename "$APK" )
         ${AOSP_DIR}/out/host/linux-x86/bin/dex2oat --runtime-arg -classpath --runtime-arg $(basename "$APK" ) --instruction-set=arm --runtime-arg -Xrelocate --host --boot-image=$BOOT_IMAGE --dex-file=$(basename "$APK" ) --oat-file=$(basename "$APK" ).dex
-        ${AOSP_DIR}/out/host/linux-x86/bin/oatdump --oat-file=$(basename "$APK" ).dex --output=$out_dir/$(basename "$APK" ).dex.txt
+        ${AOSP_DIR}/out/host/linux-x86/bin/oatdump --oat-file=$(basename "$APK" ).dex --instruction-set=arm --output=$out_dir/$(basename "$APK" ).dex.txt
 		rm $(basename "$APK" )
 		rm $(basename "$APK" ).dex
 	done
