@@ -26,10 +26,10 @@ convert () {
 	for APK in  $(ls $in_dir/*.apk |sort -R); do
 		cp $in_dir/$(basename "$APK" ) ./$(basename "$APK" )
         
-		timeout 5s ${AOSP_DIR}/out/host/linux-x86/bin/dex2oat --runtime-arg -classpath --runtime-arg $(basename "$APK" ) --instruction-set=arm --runtime-arg -Xrelocate --host --boot-image=$BOOT_IMAGE --dex-file=$(basename "$APK" ) --oat-file=$(basename "$APK" ).dex
+		timeout 15s ${AOSP_DIR}/out/host/linux-x86/bin/dex2oat --runtime-arg -classpath --runtime-arg $(basename "$APK" ) --instruction-set=arm --runtime-arg -Xrelocate --host --boot-image=$BOOT_IMAGE --dex-file=$(basename "$APK" ) --oat-file=$(basename "$APK" ).dex
         exit_status=$?
 		if [ $exit_status -ne 124 ] && [ $exit_status -ne 125 ] && [ $exit_status -ne 126 ] && [ $exit_status -ne 127 ] && [ $exit_status -ne 137 ]; then
-    		timeout 5s ${AOSP_DIR}/out/host/linux-x86/bin/oatdump --oat-file=$(basename "$APK" ).dex --instruction-set=arm --output=$out_dir/$(basename "$APK" ).dex.txt
+    		timeout 15s ${AOSP_DIR}/out/host/linux-x86/bin/oatdump --oat-file=$(basename "$APK" ).dex --instruction-set=arm --output=$out_dir/$(basename "$APK" ).dex.txt
 			exit_status=$?
 			if [[ $exit_status -eq 124 ]]; then
 				echo "running oatdump on $(basename "$APK" ) timed out"
