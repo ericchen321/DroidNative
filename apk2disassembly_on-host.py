@@ -2,11 +2,21 @@
 #         Ryan Riley
 # Batch-producing disassembly files from apk files. This script was modified based
 # Requires Python 3.5
-# on the original shell script from Ryan Riley: https://gist.github.com/rriley/a0b5eb36a093a66e86a8
+# Modified based on the original shell script from Ryan Riley: https://gist.github.com/rriley/a0b5eb36a093a66e86a8
 # Also referenced: https://stackoverflow.com/questions/29291270/threading-in-python-processing-multiple-large-files-concurrently
 #                  https://stackoverflow.com/questions/41094707/setting-timeout-when-using-os-system-function
 #                  https://stackoverflow.com/questions/5442910/python-multiprocessing-pool-map-for-multiple-arguments
-# usage:
+# How to use ART to get disassembly files on-host:
+# - Setup before running the script:
+# 1. Get source code according to https://source.android.com/source/downloading.html
+# 2. Change to source code directory
+# 3. cp /usr/bin/ld.gold prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.11-4.6/x86_64-linux/bin/ld
+# 4. source build/envsetup.sh
+# 5. mm build-art
+# 6. Build the full android image for aosp_arm-eng
+#   (Follow the directions at https://source.android.com/source/building.html)
+# 7. Run this script
+# - Script usage:
 # first param: path to directory where benign apks are stored
 # 2nd param: path to directory where malware apks are stored
 # 3rd param: path to output directory where benign txts are stored
