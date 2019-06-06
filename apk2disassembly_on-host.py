@@ -25,6 +25,7 @@
 # 2nd param: path to directory where malware apks are stored
 # 3rd param: path to output directory where benign txts are stored
 # 4th param: path to output directory where malware txts are stored
+# 5th param (optional): path to Android directory (example: /data/guanxiong/android_source). If not provided then use Android 7 build
 
 import sys
 import os
@@ -33,10 +34,10 @@ from multiprocessing import Pool
 from itertools import product
 import itertools
 
-AOSP_DIR = "/data/guanxiong/android_source"
-ANDROID_DATA = AOSP_DIR + "/out/host/datadir/dalvik-cache/x86_64"
-ANDROID_ROOT = AOSP_DIR + "/out/host/linux-x86"
-BOOT_IMAGE = AOSP_DIR + "/out/target/product/generic/system/framework/boot.art"
+AOSP_DIR = None
+ANDROID_DATA = None
+ANDROID_ROOT = None
+BOOT_IMAGE = None
 
 # Yield successive n-sized chunks from list
 def partition_list(list, n):
@@ -60,7 +61,7 @@ def convert_files(in_path, out_path):
     for partition in partitions:
         pool.starmap(convert_file, itertools.product(partition, [out_path]))
 
-if(len(sys.argv)!=5):
+if(len(sys.argv)!=5 and len(sys.argv)!=6):
 	print("Wrong arguments, please check comments in the script for usage")
 	sys.exit(1)
 
@@ -68,7 +69,14 @@ dir_in_benign = sys.argv[1]
 dir_in_mal = sys.argv[2]
 dir_out_benign = sys.argv[3]
 dir_out_mal = sys.argv[4]
+if(len(sys.argv)==6):
+    AOSP_DIR = sys.argv[5]
+else:
+    AOSP_DIR = "/data/guanxiong/android_source" # by default uses Android 7
 
+ANDROID_DATA = AOSP_DIR + "/out/host/datadir/dalvik-cache/x86_64"
+ANDROID_ROOT = AOSP_DIR + "/out/host/linux-x86"
+BOOT_IMAGE = AOSP_DIR + "/out/target/product/generic/system/framework/boot.art"
 os.environ["ANDROID_DATA"] = ANDROID_DATA
 os.environ["ANDROID_ROOT"] = ANDROID_ROOT
 os.system("mkdir -p " + ANDROID_DATA)
