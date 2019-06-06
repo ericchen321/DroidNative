@@ -72,7 +72,7 @@ dir_out_mal = sys.argv[4]
 if(len(sys.argv)==6):
     AOSP_DIR = sys.argv[5]
 else:
-    AOSP_DIR = "/data/guanxiong/android_source" # by default uses Android 7
+    AOSP_DIR = "/data/guanxiong/android_source_7" # by default uses Android 7
 
 ANDROID_DATA = AOSP_DIR + "/out/host/datadir/dalvik-cache/x86_64"
 ANDROID_ROOT = AOSP_DIR + "/out/host/linux-x86"
