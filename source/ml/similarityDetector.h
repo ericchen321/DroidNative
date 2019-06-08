@@ -70,6 +70,7 @@ public:
 	void SetThreshold(float threshold_gm);
 	void CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, unsigned int max_threads);
 	void CheckBinariesUsingSignatureMatching(string malware_samples, string benign_samples, string virus_samples, string files_to_check, unsigned int max_threads);
+	void GenerateSignaturesOfPartition(unsigned int partition_index, vector<string> training_data_files_used, ML* ml);
 };
 
 #endif // __SIMILARITY_DETECTOR_H__

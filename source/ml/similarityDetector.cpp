@@ -870,3 +870,145 @@ SIGNATURE *SimilarityDetector::BuildSignature(MAIL *mail)
 
 	return (sig);
 }
+
+/* generate signatures for all malware samples in the given partition;
+ * save signature to all given training data files
+ */
+void SimilarityDetector::GenerateSignaturesOfPartition(unsigned int partition_index, vector<string> training_data_files_used, ML* ml){
+	char buff[100];
+  	snprintf(buff, sizeof(buff), "malware_samples_%02d", partition_index);
+  	string malware_samples_i = buff;
+#ifdef __TRAINING_TIME__
+	clock_t start = 0, end = 0;
+	double time = 0.0;
+#endif
+
+#ifdef __MULTI_THREAD__
+	uint64_t CountSignatures = 0;
+#endif
+	ifstream fileP(malware_samples_i.c_str(), ios::in | ios::binary | ios::ate);
+	if (fileP.is_open())
+	{
+		unsigned int fileSize = (unsigned int)fileP.tellg();                // How much buffer we need for the file
+		fileP.seekg (0, ios::beg);
+		char *fileBufferP = new char[fileSize+1];
+		fileP.read(fileBufferP, fileSize);                                  // Read the file into the buffer
+		fileP.close();
+		fileBufferP[fileSize] = '\0';
+
+		char filename[3*MAX_FILENAME+1];
+		int c = 0;
+		for (unsigned int n = 0; n < fileSize; n++)
+		{
+			if ( (c < 3*MAX_FILENAME) && (fileBufferP[n] == '\n' || fileBufferP[n] == '\r') )
+			{
+				filename[c] = '\0';
+				ifstream file(filename, ios::in | ios::binary | ios::ate);
+				if (file.is_open())
+				{
+					unsigned int size = (unsigned int)file.tellg();         // How much buffer we need for the file
+#ifdef __PROGRAM_OUTPUT_ENABLED__
+					printf("Generating malware signatures from file: %s\n", filename);
+					fflush(stdout);
+#endif
+					file.seekg (0, ios::beg);
+					char *fileBuffer = new char[size+1];
+					file.read(fileBuffer, size);                           // Read the file into the buffer
+					file.close();
+					fileBuffer[size] = '\0';
+
+#ifdef __TRAINING_TIME__
+					start = clock();
+#endif
+#ifdef __MULTI_THREAD__
+					BuildGraphs(ml, filename, fileBuffer, size);
+					CountSignatures++;
+#else
+					Parser *parser = new Parser((uint8_t *)fileBuffer, size);
+					parser->Parse(filename);
+					vector <CFG *> cfgs = parser->BuildCFGs();
+					ml->BuildDataUsingGraphMatching(cfgs);
+
+					delete (parser);
+					delete (fileBuffer);
+#endif
+#ifdef __TRAINING_TIME__
+					end = clock();
+					time += (end - start);
+#endif
+				}
+				else
+					cout << "Error:SimilarityDetector::TrainDataUsingGraphMatching: Cannot open the file: " << filename << "\n";
+
+				c = 0;
+				filename[c] = '\0';
+				if ( n < (fileSize-1) && (fileBufferP[n+1] == '\n' || fileBufferP[n+1] == '\r') )
+					n++;
+			}
+			else if (c < 3*MAX_FILENAME)
+				filename[c++] = fileBufferP[n];
+			else
+				c = 0;
+		}
+		delete (fileBufferP);
+
+#ifdef __DEBUG__
+		for (int s = 0; s < (int)Signatures.size(); s++)
+		{
+			vector <CFG *> sig_cfgs = Signatures[s]->cfgs;
+printf("SimilarityDetector::TrainDataUsingGraphMatching\n");
+cout  << "sig_cfgs.size(): " << sig_cfgs.size() << endl;
+			for (int c = 0; c < (int)sig_cfgs.size(); c++)
+			{
+				vector<Block *> blocks = sig_cfgs[c]->GetBlocks();
+				for (int b = 0; b < (int)blocks.size(); b++)
+					sig_cfgs[c]->PrintBlock(blocks[b], true);
+			}
+		}
+#endif
+	}
+	else
+		cout << "Error:SimilarityDetector::TrainDataUsingGraphMatching: Cannot open the file: " << malware_samples_i << "\n";
+
+	for(unsigned int i=0; i<training_data_files_used.size(); i++){
+		ml->SaveACFGSignatures(training_data_files_used[i]);
+	}
+
+#ifdef __TRAINING_TIME__
+	start = clock();
+#endif
+#ifdef __MULTI_THREAD__
+	while (THREAD_BUILD_GRAPHS > 0)
+	{
+#ifdef __WIN32__
+		Sleep (10);
+#endif
+#ifdef __DEBUG__
+		cout << "THREAD_BUILD_GRAPHS: " << THREAD_BUILD_GRAPHS << endl;
+#endif
+	}
+#endif
+#ifdef __TRAINING_TIME__
+	end = clock();
+	time += (end - start);
+	total_training_time = ((double)(time))/CLOCKS_PER_SEC;
+	cout << "Common CFGs = " << ml->GetCommonCFGs() << endl;
+	cout << "Distinguish CFGs = " << ml->GetDistinguishCFGs() << endl;
+	cout << "SimilarityDetector::TrainDataUsingGraphMatching: Total Training (building all signatures) time: " << total_training_time << " second(s)\n";
+#endif
+
+#ifdef __DEBUG__
+	for (int s = 0; s < Signatures.size(); s++)
+	{
+		vector <CFG *> sig_cfgs = Signatures[s]->cfgs;
+printf("SimilarityDetector::TrainDataUsingGraphMatching\n");
+cout  << "sig_cfgs.size(): " << sig_cfgs.size() << endl;
+		for (int c = 0; c < (int)sig_cfgs.size(); c++)
+		{
+			vector<Block *> blocks = sig_cfgs[c]->GetBlocks();
+			for (int b = 0; b < (int)blocks.size(); b++)
+				sig_cfgs[c]->PrintBlock(blocks[b], true);
+		}
+	}
+#endif
+}

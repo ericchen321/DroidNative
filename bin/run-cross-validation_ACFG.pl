@@ -57,9 +57,9 @@ use strict;
 use warnings;
 
 my $num_args = $#ARGV + 1;
-if ($num_args != 7)
+if ($num_args != 8)
 {
-	die "Usage:\nrun-cross-validation.pl <max_threads> <n> <file_name_benign_samples> <file_name_malware_samples> <file_name_DroidNative> <build_roc=0/1> <THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING>\nbuild_roc = 0 Just run once\nbuild_roc = 1 Run more than once, from THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING - 100 for building ROC\n\nExample:\nrun-cross-validation.pl 1 10 benign_samples.txt malware_samples.txt DroidNative.exe 1 1\n";
+	die "Usage:\nrun-cross-validation.pl <max_threads> <n> <file_name_benign_samples> <file_name_malware_samples> <file_name_DroidNative> <build_roc=0/1> <THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING> <build_sigs_only=0/1>\nbuild_roc = 0 Just run once\nbuild_roc = 1 Run more than once, from THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING - 100 for building ROC\n\nExample:\nrun-cross-validation.pl 1 10 benign_samples.txt malware_samples.txt DroidNative.exe 1 1 0\n";
 }
 
 my $max_threads = $ARGV[0];
@@ -69,6 +69,7 @@ my $MALWARE_FILE = $ARGV[3];
 my $DroidNative_full_path = $ARGV[4];
 my $BUILD_ROC = $ARGV[5];
 my $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING = $ARGV[6];
+my $BUILD_SIG_ONLY = $ARGV[7];
 print "n = $N\nbenign_file = $BENIGN_FILE\nmalware_file = $MALWARE_FILE\n";
 print "THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING = $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING\n";
 
@@ -274,7 +275,12 @@ for (my $i = 0; $i < $N; $i++)
 	}
 }
 
-if ($BUILD_ROC == 1)
+if ($BUILD_SIG_ONLY == 1){
+	my $cmd = sprintf("%s %d %d", $DroidNative_full_path, $max_threads, $N);
+	print "\nRunning $cmd\n";
+	system ($cmd);
+}
+elsif ($BUILD_ROC == 1)
 {
 	#
 	# Running the tool DroidNative with appropriate command line parameters
@@ -290,7 +296,7 @@ if ($BUILD_ROC == 1)
 		$THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING = $count;
 		for (my $i = 0; $i < $N; $i++)
 		{
-			my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt > results_%03d_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $count, $i);
+			my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt 0 malware_samples.txt > results_%03d_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $count, $i);
 			print "\nRunning $cmd\n";
 			system ($cmd);
 		}
@@ -304,7 +310,7 @@ elsif ($BUILD_ROC == 0)
 	#
 	for (my $i = 0; $i < $N; $i++)
 	{
-		my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt > results_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $i);
+		my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt 0 malware_samples.txt > results_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $i);
 		print "\nRunning $cmd\n";
 		system ($cmd);
 	}
