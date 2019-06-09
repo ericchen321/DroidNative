@@ -98,7 +98,8 @@ def identify_errors(apk_path, log_path):
 
 # Convert given apk file to txt file stored in out_path; store
 # terminal log to <apk_name>.dex2oat.log and <apk name>.oatdump.log
-# under log_path
+# under log_path; generate error messages if errors occured during
+# conversion; print out SDK version info of apk with conversion error
 def convert_file(apk_path, out_path, log_path):
     apk_name = os.path.basename(apk_path)
     os.system("cp " + apk_path + " ./" + apk_name)
@@ -117,9 +118,10 @@ def convert_file(apk_path, out_path, log_path):
 # Convert apk files in in_path to txt files stroed in out_path; store terminal log
 # to log_path
 def convert_files(in_path, out_path, log_path):
-    pool = Pool(5)
+    parallel_count = 10
+    pool = Pool(parallel_count)
     samples = glob.glob(in_path + "/*.apk")
-    partitions = list(partition_list(samples, 5))
+    partitions = list(partition_list(samples, parallel_count))
     for partition in partitions:
         pool.starmap(convert_file, itertools.product(partition, [out_path], [log_path]))
 
