@@ -29,6 +29,8 @@
 import sys
 import os
 import glob
+import subprocess
+import re
 from multiprocessing import Pool
 from itertools import product
 import itertools
@@ -43,14 +45,72 @@ def partition_list(list, n):
     for i in range(0, len(list), n):
         yield list[i:i + n]
 
+# extract SDK version info of given apk file
+def extract_sdk_version(apk_name):
+    versionInfo = None
+    subprocess.run("aapt dump badging " + apk_name + " | grep sdkVersion", stdout=versionInfo, universal_newlines=True, shell=True)
+    if versionInfo is not None:
+        print("    " + apk_name + versionInfo)
+    subprocess.run("aapt dump badging " + apk_name + " | grep minSdkVersion", stdout=versionInfo, universal_newlines=True, shell=True)
+    if versionInfo is not None:
+        print("    " + apk_name + versionInfo)
+    subprocess.run("aapt dump badging " + apk_name + " | grep targetSdkVersion", stdout=versionInfo, universal_newlines=True, shell=True)
+    if versionInfo is not None:
+        print("    " + apk_name + versionInfo)
+
+# identify given apk's verification errors and lock errors from 
+# dex2oat and oatdump's terminal message. Returns 1 if got any errors
+def identify_errors(apk_path, log_path):
+    apk_name = os.path.basename(apk_path)
+    log_file_dex2oat = open(log_path + '/' + apk_name + '.dex2oat.log', 'r')
+    log_file_oatdump = open(log_path + '/' + apk_name + '.oatdump.log', 'r')
+    error = 0
+
+    # search only first 100 lines
+    line_count = 0
+    for line in log_file_dex2oat.readlines():
+        if re.search('verification error', line, re.IGNORECASE):
+            print("File " + apk_path + " got verification error")
+            error = 1
+            break
+        line_count += 1
+        if line_count >= 100:
+            break
+    line_count = 0
+    for line in log_file_dex2oat.readlines():
+        if re.search('lock', line, re.IGNORECASE):
+            print("File " + apk_path + " got lock error")
+            error = 1
+            break
+        line_count += 1
+        if line_count >= 100:
+            break
+    line_count = 0
+    for line in log_file_oatdump.readlines():
+        if re.search('too short', line, re.IGNORECASE):
+            print("File " + apk_path + " failed to have its oat and txt file produced")
+            error = 1
+            break
+        line_count += 1
+        if line_count >= 100:
+            break
+    return error
+
 # Convert given apk file to txt file stored in out_path; store
 # terminal log to <apk_name>.dex2oat.log and <apk name>.oatdump.log
 # under log_path
 def convert_file(apk_path, out_path, log_path):
     apk_name = os.path.basename(apk_path)
     os.system("cp " + apk_path + " ./" + apk_name)
-    os.system("out/host/linux-x86/bin/dex2oat --runtime-arg -classpath --runtime-arg " + apk_name + " --instruction-set=arm " + "--runtime-arg " + "-Xrelocate " + "--host " + "--boot-image=" + BOOT_IMAGE + " --dex-file=" + apk_name + " --oat-file=" + apk_name + ".dex" + " 2>&1 | tee " + log_path + "/" + apk_name + ".dex2oat.log")
-    os.system("out/host/linux-x86/bin/oatdump --oat-file=" + apk_name + ".dex" + " --instruction-set=arm" + " --output=" + out_path + "/" + apk_name + ".dex" + ".txt" + " 2>&1 | tee " + log_path + "/" + apk_name + ".oatdump.log")
+
+    log_file_dex2oat = open(log_path + '/' + apk_name + '.dex2oat.log', 'w')
+    log_file_oatdump = open(log_path + '/' + apk_name + '.oatdump.log', 'w')
+    subprocess.run("out/host/linux-x86/bin/dex2oat --runtime-arg -classpath --runtime-arg " + apk_name + " --instruction-set=arm " + "--runtime-arg " + "-Xrelocate " + "--host " + "--boot-image=" + BOOT_IMAGE + " --dex-file=" + apk_name + " --oat-file=" + apk_name + ".dex", stdout=log_file_dex2oat, stderr=log_file_dex2oat, universal_newlines=True, shell=True)
+    subprocess.run("out/host/linux-x86/bin/oatdump --oat-file=" + apk_name + ".dex" + " --instruction-set=arm" + " --output=" + out_path + "/" + apk_name + ".dex" + ".txt", stdout=log_file_oatdump, stderr=log_file_oatdump, universal_newlines=True, shell=True)
+    log_file_dex2oat.close()
+    log_file_oatdump.close()
+    if identify_errors(apk_path, log_path):
+        extract_sdk_version(apk_name)
     os.system("rm " + apk_name)
     os.system("rm " + apk_name + ".dex")
 
