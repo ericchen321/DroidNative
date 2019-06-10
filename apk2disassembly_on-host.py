@@ -48,15 +48,9 @@ def partition_list(list, n):
 # extract SDK version info of given apk file
 def extract_sdk_version(apk_name):
     versionInfo = None
-    subprocess.run("aapt dump badging " + apk_name + " | grep sdkVersion", stdout=versionInfo, universal_newlines=True, shell=True)
-    if versionInfo is not None:
-        print("    " + apk_name + versionInfo)
-    subprocess.run("aapt dump badging " + apk_name + " | grep minSdkVersion", stdout=versionInfo, universal_newlines=True, shell=True)
-    if versionInfo is not None:
-        print("    " + apk_name + versionInfo)
-    subprocess.run("aapt dump badging " + apk_name + " | grep targetSdkVersion", stdout=versionInfo, universal_newlines=True, shell=True)
-    if versionInfo is not None:
-        print("    " + apk_name + versionInfo)
+    os.system("aapt dump badging " + apk_name + " | grep sdkVersion")
+    os.system("aapt dump badging " + apk_name + " | grep minSdkVersion")
+    os.system("aapt dump badging " + apk_name + " | grep targetSdkVersion")
 
 # identify given apk's verification errors and lock errors from 
 # dex2oat and oatdump's terminal message. Returns 1 if got any errors
@@ -64,37 +58,26 @@ def identify_errors(apk_path, log_path):
     apk_name = os.path.basename(apk_path)
     log_file_dex2oat = open(log_path + '/' + apk_name + '.dex2oat.log', 'r')
     log_file_oatdump = open(log_path + '/' + apk_name + '.oatdump.log', 'r')
-    error = 0
+    verification_error = False
+    lock_verification_error = False
+    oat_file_gen_error = False
 
     # search only first 100 lines
     line_count = 0
     for line in log_file_dex2oat.readlines():
-        if re.search('verification error', line, re.IGNORECASE):
+        if (not verification_error) and re.search('verification error', line, re.IGNORECASE):
             print("File " + apk_path + " got verification error")
-            error = 1
-            break
-        line_count += 1
-        if line_count >= 100:
-            break
-    line_count = 0
-    for line in log_file_dex2oat.readlines():
-        if re.search('lock', line, re.IGNORECASE):
-            print("File " + apk_path + " got lock error")
-            error = 1
-            break
-        line_count += 1
-        if line_count >= 100:
-            break
-    line_count = 0
-    for line in log_file_oatdump.readlines():
-        if re.search('too short', line, re.IGNORECASE):
+            verification_error = True
+        if (not lock_verification_error) and re.search('failed lock verification', line, re.IGNORECASE):
+            print("File " + apk_path + " got lock verification error")
+            lock_verification_error = True
+        if (not oat_file_gen_error) and re.search('too short', line, re.IGNORECASE):
             print("File " + apk_path + " failed to have its oat and txt file produced")
-            error = 1
-            break
+            oat_file_gen_error = True
         line_count += 1
         if line_count >= 100:
             break
-    return error
+    return (verification_error or lock_verification_error or oat_file_gen_error)
 
 # Convert given apk file to txt file stored in out_path; store
 # terminal log to <apk_name>.dex2oat.log and <apk name>.oatdump.log
