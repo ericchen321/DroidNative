@@ -88,195 +88,195 @@ my $MALWARE_sub_samples = $MALWARE_FILE_SIZE / $N;
 print "benign_sub_samples = $BENIGN_sub_samples\nmalware_sub_samples = $MALWARE_sub_samples\n";
 print "\n";
 
-#
-# Geneating true random locations for picking files randomly from the benign file.
-# Each random location is unique.
-#
-my @files_locations_benign;
-my $global_count = 0;
-my $GLOBAL_LIMIT = 1000 * ($BENIGN_FILE_SIZE + $MALWARE_FILE_SIZE);
-my @already_selected;
-for (my $s = 0; $s < $BENIGN_FILE_SIZE; $s++)
-{
-	$already_selected[$s] = 0;
-}
-for (my $i = 0; $i < $N; $i++)
-{
-	for (my $s = 0; $s < $BENIGN_sub_samples; $s++)
-	{
-		$files_locations_benign[$i][$s] = 0;
-	}
-	for (my $s = 0; $s < $BENIGN_sub_samples; )
-	{
-		my $random_number = int(rand($BENIGN_FILE_SIZE));
-		if ($already_selected[$random_number] == 0)
-		{
-			$files_locations_benign[$i][$s] = $random_number;
-			$already_selected[$random_number] = 1;
-			$s++;
-		}
-		$global_count++;
-		if ($global_count > $GLOBAL_LIMIT)
-		{
-			die "SYSTEM ERROR 1: $s Generating random numbers $global_count > $GLOBAL_LIMIT . . .\nPlease try again . . .\n";
-		}
-	}
-}
-#
-# Checking the randomness of the locations.
-#
-for (my $s = 0; $s < $BENIGN_FILE_SIZE; $s++)
-{
-	if ($already_selected[$s] == 0)
-	{
-		print "FAILED THE TEST: already_selected is '0' @ $s\n";
-		die "SYSTEM ERROR 1: Generating random numbers . . .\nPlease try again . . .\n";
-	}
-}
-#
-# Geneating true random locations for picking files randomly from the malware file.
-# Each random location is unique.
-#
-my @files_locations_malware;
-$global_count = 0;
-$GLOBAL_LIMIT = 1000 * ($BENIGN_FILE_SIZE + $MALWARE_FILE_SIZE);
-for (my $s = 0; $s < $MALWARE_FILE_SIZE; $s++)
-{
-	$already_selected[$s] = 0;
-}
-for (my $i = 0; $i < $N; $i++)
-{
-	for (my $s = 0; $s < $MALWARE_sub_samples; $s++)
-	{
-		$files_locations_malware[$i][$s] = 0;
-	}
-	for (my $s = 0; $s < $MALWARE_sub_samples; )
-	{
-		my $random_number = int(rand($MALWARE_FILE_SIZE));
-		if ($already_selected[$random_number] == 0)
-		{
-			$files_locations_malware[$i][$s] = $random_number;
-			$already_selected[$random_number] = 1;
-			$s++;
-		}
-		$global_count++;
-		if ($global_count > $GLOBAL_LIMIT)
-		{
-			die "SYSTEM ERROR 2: $s Generating random numbers $global_count > $GLOBAL_LIMIT . . .\nPlease try again . . .\n";
-		}
-	}
-}
-#
-# Checking the randomness of the locations.
-#
-for (my $s = 0; $s < $MALWARE_FILE_SIZE; $s++)
-{
-	if ($already_selected[$s] == 0)
-	{
-		print "FAILED THE TEST: already_selected is '0' @ $s\n";
-		die "SYSTEM ERROR 2: Generating random numbers . . .\nPlease try again . . .\n";
-	}
-}
-
-#
-# Generating benign files to be used latter
-#
-open($FH,"$BENIGN_FILE") or die "ERROR - Cannot open $BENIGN_FILE . . .";
-my @benign_lines = <$FH>;
-for (my $i = 0; $i < $N; $i++)
-{
-	my $file_name = sprintf("benign_samples_%02d", $i);
-	print "Generating $file_name\n";
-	open(my $FH_file,'>', "$file_name") or die "ERROR - Cannot open $file_name . . .";
-	for (my $s = 0; $s < $BENIGN_sub_samples; $s++)
-	{
-		my $location = $files_locations_benign[$i][$s];
-		my $benign_file = $benign_lines[$location];
-		print $FH_file "$benign_file";
-	}
-	close $FH_file;
-}
-close $FH;
-
-#
-# Generating malware files to be used latter
-#
-open($FH,"$MALWARE_FILE") or die "ERROR - Cannot open $MALWARE_FILE . . .";
-my @malware_lines = <$FH>;
-for (my $i = 0; $i < $N; $i++)
-{
-	my $file_name = sprintf("malware_samples_%02d", $i);
-	print "Generating $file_name\n";
-	open(my $FH_file,'>', "$file_name") or die "ERROR - Cannot open $file_name . . .";
-	for (my $s = 0; $s < $MALWARE_sub_samples; $s++)
-	{
-		my $location = $files_locations_malware[$i][$s];
-		my $malware_file = $malware_lines[$location];
-		print $FH_file "$malware_file";
-	}
-	close $FH_file;
-}
-close $FH;
-
-#
-# Generating other files for testing
-#
-print "\n";
-for (my $i = 0; $i < $N; $i++)
-{
-	my $cmd = sprintf("cat malware_samples_%02d benign_samples_%02d > files_to_check_%02d.txt", $i, $i, $i);
-	print "Running $cmd\n";
-	system ($cmd);
-
-	$cmd = "cat ";
-	for (my $s = 0; $s < $N; $s++)
-	{
-		if ($s != $i)
-		{
-			$cmd = $cmd . sprintf("malware_samples_%02d ", $s);
-		}
-	}
-	if ($cmd ne "cat ")
-	{
-		$cmd = $cmd . sprintf("> malware_samples_%02d.txt", $i);
-		print "Running $cmd\n";
-		system ($cmd);
-	}
-	else
-	{
-		$cmd = $cmd . sprintf("malware_samples_%02d > malware_samples_%02d.txt", $i, $i);
-		print "Running $cmd\n";
-		system ($cmd);
-	}
-
-	$cmd = sprintf("cat malware_samples_%02d.txt > virus_samples_%02d.txt", $i, $i);;
-	print "Running $cmd\n";
-	system ($cmd);
-
-	$cmd = "cat ";
-	for (my $s = 0; $s < $N; $s++)
-	{
-		if ($s != $i)
-		{
-			$cmd = $cmd . sprintf("benign_samples_%02d ", $s);
-		}
-	}
-	if ($cmd ne "cat ")
-	{
-		$cmd = $cmd . sprintf("> benign_samples_%02d.txt", $i);
-		print "Running $cmd\n\n";
-		system ($cmd);
-	}
-	else
-	{
-		$cmd = $cmd . sprintf("benign_samples_%02d > benign_samples_%02d.txt", $i, $i);
-		print "Running $cmd\n";
-		system ($cmd);
-	}
-}
-
 if ($BUILD_SIG_ONLY == 1){
-	my $cmd = sprintf("%s %d %d", $DroidNative_full_path, $max_threads, $N);
+	#
+	# Geneating true random locations for picking files randomly from the benign file.
+	# Each random location is unique.
+	#
+	my @files_locations_benign;
+	my $global_count = 0;
+	my $GLOBAL_LIMIT = 1000 * ($BENIGN_FILE_SIZE + $MALWARE_FILE_SIZE);
+	my @already_selected;
+	for (my $s = 0; $s < $BENIGN_FILE_SIZE; $s++)
+	{
+		$already_selected[$s] = 0;
+	}
+	for (my $i = 0; $i < $N; $i++)
+	{
+		for (my $s = 0; $s < $BENIGN_sub_samples; $s++)
+		{
+			$files_locations_benign[$i][$s] = 0;
+		}
+		for (my $s = 0; $s < $BENIGN_sub_samples; )
+		{
+			my $random_number = int(rand($BENIGN_FILE_SIZE));
+			if ($already_selected[$random_number] == 0)
+			{
+				$files_locations_benign[$i][$s] = $random_number;
+				$already_selected[$random_number] = 1;
+				$s++;
+			}
+			$global_count++;
+			if ($global_count > $GLOBAL_LIMIT)
+			{
+				die "SYSTEM ERROR 1: $s Generating random numbers $global_count > $GLOBAL_LIMIT . . .\nPlease try again . . .\n";
+			}
+		}
+	}
+	#
+	# Checking the randomness of the locations.
+	#
+	for (my $s = 0; $s < $BENIGN_FILE_SIZE; $s++)
+	{
+		if ($already_selected[$s] == 0)
+		{
+			print "FAILED THE TEST: already_selected is '0' @ $s\n";
+			die "SYSTEM ERROR 1: Generating random numbers . . .\nPlease try again . . .\n";
+		}
+	}
+	#
+	# Geneating true random locations for picking files randomly from the malware file.
+	# Each random location is unique.
+	#
+	my @files_locations_malware;
+	$global_count = 0;
+	$GLOBAL_LIMIT = 1000 * ($BENIGN_FILE_SIZE + $MALWARE_FILE_SIZE);
+	for (my $s = 0; $s < $MALWARE_FILE_SIZE; $s++)
+	{
+		$already_selected[$s] = 0;
+	}
+	for (my $i = 0; $i < $N; $i++)
+	{
+		for (my $s = 0; $s < $MALWARE_sub_samples; $s++)
+		{
+			$files_locations_malware[$i][$s] = 0;
+		}
+		for (my $s = 0; $s < $MALWARE_sub_samples; )
+		{
+			my $random_number = int(rand($MALWARE_FILE_SIZE));
+			if ($already_selected[$random_number] == 0)
+			{
+				$files_locations_malware[$i][$s] = $random_number;
+				$already_selected[$random_number] = 1;
+				$s++;
+			}
+			$global_count++;
+			if ($global_count > $GLOBAL_LIMIT)
+			{
+				die "SYSTEM ERROR 2: $s Generating random numbers $global_count > $GLOBAL_LIMIT . . .\nPlease try again . . .\n";
+			}
+		}
+	}
+	#
+	# Checking the randomness of the locations.
+	#
+	for (my $s = 0; $s < $MALWARE_FILE_SIZE; $s++)
+	{
+		if ($already_selected[$s] == 0)
+		{
+			print "FAILED THE TEST: already_selected is '0' @ $s\n";
+			die "SYSTEM ERROR 2: Generating random numbers . . .\nPlease try again . . .\n";
+		}
+	}
+
+	#
+	# Generating benign files to be used latter
+	#
+	open($FH,"$BENIGN_FILE") or die "ERROR - Cannot open $BENIGN_FILE . . .";
+	my @benign_lines = <$FH>;
+	for (my $i = 0; $i < $N; $i++)
+	{
+		my $file_name = sprintf("benign_samples_%02d", $i);
+		print "Generating $file_name\n";
+		open(my $FH_file,'>', "$file_name") or die "ERROR - Cannot open $file_name . . .";
+		for (my $s = 0; $s < $BENIGN_sub_samples; $s++)
+		{
+			my $location = $files_locations_benign[$i][$s];
+			my $benign_file = $benign_lines[$location];
+			print $FH_file "$benign_file";
+		}
+		close $FH_file;
+	}
+	close $FH;
+
+	#
+	# Generating malware files to be used latter
+	#
+	open($FH,"$MALWARE_FILE") or die "ERROR - Cannot open $MALWARE_FILE . . .";
+	my @malware_lines = <$FH>;
+	for (my $i = 0; $i < $N; $i++)
+	{
+		my $file_name = sprintf("malware_samples_%02d", $i);
+		print "Generating $file_name\n";
+		open(my $FH_file,'>', "$file_name") or die "ERROR - Cannot open $file_name . . .";
+		for (my $s = 0; $s < $MALWARE_sub_samples; $s++)
+		{
+			my $location = $files_locations_malware[$i][$s];
+			my $malware_file = $malware_lines[$location];
+			print $FH_file "$malware_file";
+		}
+		close $FH_file;
+	}
+	close $FH;
+
+	#
+	# Generating other files for testing
+	#
+	print "\n";
+	for (my $i = 0; $i < $N; $i++)
+	{
+		my $cmd = sprintf("cat malware_samples_%02d benign_samples_%02d > files_to_check_%02d.txt", $i, $i, $i);
+		print "Running $cmd\n";
+		system ($cmd);
+
+		$cmd = "cat ";
+		for (my $s = 0; $s < $N; $s++)
+		{
+			if ($s != $i)
+			{
+				$cmd = $cmd . sprintf("malware_samples_%02d ", $s);
+			}
+		}
+		if ($cmd ne "cat ")
+		{
+			$cmd = $cmd . sprintf("> malware_samples_%02d.txt", $i);
+			print "Running $cmd\n";
+			system ($cmd);
+		}
+		else
+		{
+			$cmd = $cmd . sprintf("malware_samples_%02d > malware_samples_%02d.txt", $i, $i);
+			print "Running $cmd\n";
+			system ($cmd);
+		}
+
+		$cmd = sprintf("cat malware_samples_%02d.txt > virus_samples_%02d.txt", $i, $i);;
+		print "Running $cmd\n";
+		system ($cmd);
+
+		$cmd = "cat ";
+		for (my $s = 0; $s < $N; $s++)
+		{
+			if ($s != $i)
+			{
+				$cmd = $cmd . sprintf("benign_samples_%02d ", $s);
+			}
+		}
+		if ($cmd ne "cat ")
+		{
+			$cmd = $cmd . sprintf("> benign_samples_%02d.txt", $i);
+			print "Running $cmd\n\n";
+			system ($cmd);
+		}
+		else
+		{
+			$cmd = $cmd . sprintf("benign_samples_%02d > benign_samples_%02d.txt", $i, $i);
+			print "Running $cmd\n";
+			system ($cmd);
+		}
+	}
+
+	my $cmd = sprintf("%s %d %s %s", $DroidNative_full_path, $max_threads, $BENIGN_FILE, $MALWARE_FILE);
 	print "\nRunning $cmd\n";
 	system ($cmd);
 }
@@ -296,7 +296,7 @@ elsif ($BUILD_ROC == 1)
 		$THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING = $count;
 		for (my $i = 0; $i < $N; $i++)
 		{
-			my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt 0 malware_samples.txt > results_%03d_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $count, $i);
+			my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt > results_%03d_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $count, $i);
 			print "\nRunning $cmd\n";
 			system ($cmd);
 		}
@@ -310,7 +310,7 @@ elsif ($BUILD_ROC == 0)
 	#
 	for (my $i = 0; $i < $N; $i++)
 	{
-		my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt 0 malware_samples.txt > results_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $i);
+		my $cmd = sprintf("%s %d %.02f virus_samples_%02d.txt files_to_check_%02d.txt > results_%02d.txt", $DroidNative_full_path, $max_threads, $THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING, $i, $i, $i);
 		print "\nRunning $cmd\n";
 		system ($cmd);
 	}

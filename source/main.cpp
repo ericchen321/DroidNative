@@ -117,34 +117,18 @@ int main(int argc, char **argv, char **envp)
 	//
 	// For graph signature (ACFG) matching, but build signatures only
 	//
-	else if (argc == 3)
+	else if (argc == 4)
 	{
 		unsigned int max_threads;
 		max_threads = atoi(argv[1]);
-		unsigned int n;
-		n = atoi(argv[2]);
+		string benign_filename = argv[2];
+		string malware_filename = argv[3];
+
+		// General signatures of all samples given
 		SimilarityDetector *sd = new SimilarityDetector();
-		ML *ml = new ML(max_threads, THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING);
-		// create empty training data files for each partition
-		vector<string> training_data_files;
-		for (unsigned int i=0; i<n; i++){
-			char buff[100];
-  			snprintf(buff, sizeof(buff), "virus_samples_%02d.txt", i);
-  			string filename_i = buff;
-			string training_data_filename_i = filename_i + "." + TRAINING_FILE_EXTENSION + ".ACFG";
-			training_data_files.push_back(training_data_filename_i);
-		}
-		// for each partition, generate signatures and write to training data files
-		for (unsigned int i=0; i<n; i++){
-			vector<string> training_data_files_used;
-			for (unsigned int j=0; j<n; j++){
-				if(j != i){
-					training_data_files_used.push_back(training_data_files[j]);
-				}
-			}
-			sd->GenerateSignaturesOfPartition(i, training_data_files_used, ml);
-		}
-		delete(ml);
+		
+		sd->GenerateSignatures(benign_filename, max_threads);
+		sd->GenerateSignatures(malware_filename, max_threads);
 	}
 #ifdef __PRINT_ONLY_MAIL__
 	//

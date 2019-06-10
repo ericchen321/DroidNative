@@ -80,7 +80,7 @@
 #define FUNCTION_CALL_COUNTER                       "CTR"
 #define STRING_ADDED                                "_ADDED_"
 
-#define TRAINING_FILE_EXTENSION                     "training.dat"
+#define SIGNATURE_FILE_EXTENSION                     "training.dat"
 
 /*
  * Forward declarations

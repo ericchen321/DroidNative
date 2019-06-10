@@ -131,6 +131,7 @@ void ML::SaveACFGSignatures(string filename)
  */
 uint64_t ML::LoadACFGSignatures(string filename)
 {
+	/* do not remove existing signatures
 	for (int i = 0; i < SignaturesACFG.size(); i++)
 		delete (SignaturesACFG[i]);
 	for (int i = 0; i < SignaturesGraph.size(); i++)
@@ -139,6 +140,7 @@ uint64_t ML::LoadACFGSignatures(string filename)
 	SignaturesACFG.clear();
 	SignaturesGraph.erase(SignaturesGraph.begin(), SignaturesGraph.end());
 	SignaturesGraph.clear();
+	*/
 
 	vector<Block *> blocks;
 	vector<BackEdge *> backEdges;
@@ -158,6 +160,21 @@ uint64_t ML::LoadACFGSignatures(string filename)
 
 	delete (isom);
 	return (SignaturesACFG.size());
+}
+
+/*
+ *
+ * Load the testing signatures from a file. Takes filename of
+ * a sample's signature data, eg. benign_01.apk.dex.txt.testing.dat.ACFG
+ *
+ */
+vector<CFG *> ML::LoadTestingACFGSignatures(string filename){
+	vector<Block *> blocks;
+	vector<BackEdge *> backEdges;
+	CFG *_cfg = new CFG(blocks, backEdges, filename);
+	vector<CFG *> cfgs = _cfg->ReadFromFile(filename);
+	delete(_cfg);
+	return cfgs;
 }
 
 /*

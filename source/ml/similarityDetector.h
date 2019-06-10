@@ -59,9 +59,10 @@ private:
 	double 	total_assigning_weight_time, total_training_time, total_testing_time;
 	void AssignWeights(string malware_samples, string benign_samples);
 	SIGNATURE *BuildSignature(MAIL *mail);
-	void TrainDataUsingGraphMatching(string filenameP, ML *ml);
+	void LoadMalwareSignatures(string virus_samples, ML* ml);
 	void TrainDataUsingSignatureMatching(string filenameP, ML *ml);
 	void BuildGraphs(ML *ml, char *filename, char *fileBuffer, unsigned int size);
+	string getBaseName(const string& s);
 
 public:
 	SimilarityDetector();
@@ -70,7 +71,7 @@ public:
 	void SetThreshold(float threshold_gm);
 	void CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, unsigned int max_threads);
 	void CheckBinariesUsingSignatureMatching(string malware_samples, string benign_samples, string virus_samples, string files_to_check, unsigned int max_threads);
-	void GenerateSignaturesOfPartition(unsigned int partition_index, vector<string> training_data_files_used, ML* ml);
+	void GenerateSignatures(string samples, int max_threads);
 };
 
 #endif // __SIMILARITY_DETECTOR_H__
