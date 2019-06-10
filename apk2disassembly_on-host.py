@@ -24,7 +24,8 @@
 # first param: path to directory where apks are stored
 # 2nd param: path to output directory where txts are stored
 # 3rd param: path to output directory where running log files are stored
-# 4th param (optional): path to Android directory (example: /data/guanxiong/android_source). If not provided then use Android 7 build
+# 4th param: number of samples to be converted. 0 means all
+# 5th param (optional): path to Android directory (example: /data/guanxiong/android_source). If not provided then use Android 7 build
 
 import sys
 import os
@@ -100,23 +101,26 @@ def convert_file(apk_path, out_path, log_path):
 
 # Convert apk files in in_path to txt files stroed in out_path; store terminal log
 # to log_path
-def convert_files(in_path, out_path, log_path):
+def convert_files(in_path, out_path, log_path, sample_count):
     parallel_count = 10
     pool = Pool(parallel_count)
     samples = glob.glob(in_path + "/*.apk")
+    if sample_count != 0:
+        samples = samples[:int(sample_count)]
     partitions = list(partition_list(samples, parallel_count))
     for partition in partitions:
         pool.starmap(convert_file, itertools.product(partition, [out_path], [log_path]))
 
-if(len(sys.argv)!=4 and len(sys.argv)!=5):
+if(len(sys.argv)!=5 and len(sys.argv)!=6):
 	print("Wrong arguments, please check comments in the script for usage")
 	sys.exit(1)
 
 dir_in = sys.argv[1]
 dir_out = sys.argv[2]
 dir_log = sys.argv[3]
-if(len(sys.argv)==5):
-    AOSP_DIR = sys.argv[4]
+sample_count = sys.argv[4]
+if(len(sys.argv)==6):
+    AOSP_DIR = sys.argv[5]
 else:
     AOSP_DIR = "/data/guanxiong/android_source_7" # by default uses Android 7
 
@@ -127,4 +131,4 @@ os.environ["ANDROID_DATA"] = ANDROID_DATA
 os.environ["ANDROID_ROOT"] = ANDROID_ROOT
 os.system("mkdir -p " + ANDROID_DATA)
 os.chdir(AOSP_DIR)
-convert_files(dir_in, dir_out, dir_log)
+convert_files(dir_in, dir_out, dir_log, sample_count)
