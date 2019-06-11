@@ -25,7 +25,7 @@
 # 2nd param: path to output directory where txts are stored
 # 3rd param: path to output directory where running log files are stored
 # 4th param: number of samples to be converted. 0 means all
-# 5th param (optional): path to Android directory (example: /data/guanxiong/android_source). If not provided then use Android 7 build
+# 5th param (optional): path to Android directory (example: /data/guanxiong/android_source_7). If not provided then use Android 7 build
 
 import sys
 import os
@@ -35,11 +35,6 @@ import re
 from multiprocessing import Pool
 from itertools import product
 import itertools
-
-AOSP_DIR = None
-ANDROID_DATA = None
-ANDROID_ROOT = None
-BOOT_IMAGE = None
 
 # Yield successive n-sized chunks from list
 def partition_list(list, n):
@@ -58,7 +53,6 @@ def extract_sdk_version(apk_name):
 def identify_errors(apk_path, log_path):
     apk_name = os.path.basename(apk_path)
     log_file_dex2oat = open(log_path + '/' + apk_name + '.dex2oat.log', 'r')
-    log_file_oatdump = open(log_path + '/' + apk_name + '.oatdump.log', 'r')
     verification_error = False
     lock_verification_error = False
     oat_file_gen_error = False
@@ -72,19 +66,20 @@ def identify_errors(apk_path, log_path):
         if (not lock_verification_error) and re.search('failed lock verification', line, re.IGNORECASE):
             print("File " + apk_path + " got lock verification error")
             lock_verification_error = True
-        if (not oat_file_gen_error) and re.search('too short', line, re.IGNORECASE):
+        if (not oat_file_gen_error) and re.search('Failed to open', line, re.IGNORECASE):
             print("File " + apk_path + " failed to have its oat and txt file produced")
             oat_file_gen_error = True
         line_count += 1
         if line_count >= 100:
             break
+
     return (verification_error or lock_verification_error or oat_file_gen_error)
 
 # Convert given apk file to txt file stored in out_path; store
 # terminal log to <apk_name>.dex2oat.log and <apk name>.oatdump.log
 # under log_path; generate error messages if errors occured during
 # conversion; print out SDK version info of apk with conversion error
-def convert_file(apk_path, out_path, log_path):
+def convert_file(apk_path, out_path, log_path, BOOT_IMAGE):
     apk_name = os.path.basename(apk_path)
     os.system("cp " + apk_path + " ./" + apk_name)
 
@@ -101,34 +96,56 @@ def convert_file(apk_path, out_path, log_path):
 
 # Convert apk files in in_path to txt files stroed in out_path; store terminal log
 # to log_path
-def convert_files(in_path, out_path, log_path, sample_count):
+def convert_files(in_path, out_path, log_path, BOOT_IMAGE, sample_count):
     parallel_count = 10
     pool = Pool(parallel_count)
     samples = glob.glob(in_path + "/*.apk")
-    if sample_count != 0:
+    if int(sample_count) != 0:
         samples = samples[:int(sample_count)]
     partitions = list(partition_list(samples, parallel_count))
     for partition in partitions:
-        pool.starmap(convert_file, itertools.product(partition, [out_path], [log_path]))
+        pool.starmap(convert_file, itertools.product(partition, [out_path], [log_path], [BOOT_IMAGE]))
 
-if(len(sys.argv)!=5 and len(sys.argv)!=6):
-	print("Wrong arguments, please check comments in the script for usage")
-	sys.exit(1)
+# Convert apk files in in_path to txt files stroed in out_path; store terminal log
+# to log_path. This function takes a file containing all apk files' paths as input
+def convert_files_alternative(txt_file_with_apk_paths, out_path, log_path, BOOT_IMAGE, sample_count):
+    parallel_count = 10
+    pool = Pool(parallel_count)
+    samples_with_nl = []
+    samples = []
+    with open(txt_file_with_apk_paths, 'r') as txt_file:
+        samples_with_nl = txt_file.readlines()
+    for sample in samples_with_nl:
+        samples.append(sample.rstrip('\n'))
+    if int(sample_count) != 0:
+        samples = samples[:int(sample_count)]
+    partitions = list(partition_list(samples, parallel_count))
+    for partition in partitions:
+        pool.starmap(convert_file, itertools.product(partition, [out_path], [log_path], [BOOT_IMAGE]))
 
-dir_in = sys.argv[1]
-dir_out = sys.argv[2]
-dir_log = sys.argv[3]
-sample_count = sys.argv[4]
-if(len(sys.argv)==6):
-    AOSP_DIR = sys.argv[5]
-else:
-    AOSP_DIR = "/data/guanxiong/android_source_7" # by default uses Android 7
+def main():
+    if(len(sys.argv)!=5 and len(sys.argv)!=6):
+        print("Wrong arguments, please check comments in the script for usage")
+        sys.exit(1)
 
-ANDROID_DATA = AOSP_DIR + "/out/host/datadir/dalvik-cache/x86_64"
-ANDROID_ROOT = AOSP_DIR + "/out/host/linux-x86"
-BOOT_IMAGE = AOSP_DIR + "/out/target/product/generic/system/framework/boot.art"
-os.environ["ANDROID_DATA"] = ANDROID_DATA
-os.environ["ANDROID_ROOT"] = ANDROID_ROOT
-os.system("mkdir -p " + ANDROID_DATA)
-os.chdir(AOSP_DIR)
-convert_files(dir_in, dir_out, dir_log, sample_count)
+    dir_in = sys.argv[1]
+    dir_out = sys.argv[2]
+    dir_log = sys.argv[3]
+    sample_count = int(sys.argv[4])
+    AOSP_DIR = None
+    if(len(sys.argv)==6):
+        AOSP_DIR = sys.argv[5]
+    else:
+        AOSP_DIR = "/data/guanxiong/android_source_7" # by default uses Android 7
+
+    ANDROID_DATA = AOSP_DIR + "/out/host/datadir/dalvik-cache/x86_64"
+    ANDROID_ROOT = AOSP_DIR + "/out/host/linux-x86"
+    BOOT_IMAGE = AOSP_DIR + "/out/target/product/generic/system/framework/boot.art"
+    os.environ["ANDROID_DATA"] = ANDROID_DATA
+    os.environ["ANDROID_ROOT"] = ANDROID_ROOT
+    os.system("mkdir -p " + ANDROID_DATA)
+    os.chdir(AOSP_DIR)
+    convert_files(dir_in, dir_out, dir_log, BOOT_IMAGE, sample_count)
+
+if __name__ == '__main__':
+    main()
