@@ -25,7 +25,8 @@
 # 2nd param: path to output directory where txts are stored
 # 3rd param: path to output directory where running log files are stored
 # 4th param: number of samples to be converted. 0 means all
-# 5th param (optional): path to Android directory (example: /data/guanxiong/android_source_7). If not provided then use Android 7 build
+# 5th param: number of processes to run preprocessing and feature extraction in parallel
+# 6th param (optional): path to Android directory (example: /data/guanxiong/android_source_7). If not provided then use Android 7 build
 
 import sys
 import os
@@ -96,21 +97,19 @@ def convert_file(apk_path, out_path, log_path, BOOT_IMAGE):
 
 # Convert apk files in in_path to txt files stroed in out_path; store terminal log
 # to log_path
-def convert_files(in_path, out_path, log_path, BOOT_IMAGE, sample_count):
-    parallel_count = 10
-    pool = Pool(parallel_count)
+def convert_files(in_path, out_path, log_path, BOOT_IMAGE, sample_count, parallel_count):
+    pool = Pool(int(parallel_count))
     samples = glob.glob(in_path + "/*.apk")
     if int(sample_count) != 0:
         samples = samples[:int(sample_count)]
-    partitions = list(partition_list(samples, parallel_count))
+    partitions = list(partition_list(samples, int(parallel_count)))
     for partition in partitions:
         pool.starmap(convert_file, itertools.product(partition, [out_path], [log_path], [BOOT_IMAGE]))
 
 # Convert apk files in in_path to txt files stroed in out_path; store terminal log
 # to log_path. This function takes a file containing all apk files' paths as input
-def convert_files_alternative(txt_file_with_apk_paths, out_path, log_path, BOOT_IMAGE, sample_count):
-    parallel_count = 10
-    pool = Pool(parallel_count)
+def convert_files_alternative(txt_file_with_apk_paths, out_path, log_path, BOOT_IMAGE, sample_count, parallel_count):
+    pool = Pool(int(parallel_count))
     samples_with_nl = []
     samples = []
     with open(txt_file_with_apk_paths, 'r') as txt_file:
@@ -119,12 +118,12 @@ def convert_files_alternative(txt_file_with_apk_paths, out_path, log_path, BOOT_
         samples.append(sample.rstrip('\n'))
     if int(sample_count) != 0:
         samples = samples[:int(sample_count)]
-    partitions = list(partition_list(samples, parallel_count))
+    partitions = list(partition_list(samples, int(parallel_count)))
     for partition in partitions:
         pool.starmap(convert_file, itertools.product(partition, [out_path], [log_path], [BOOT_IMAGE]))
 
 def main():
-    if(len(sys.argv)!=5 and len(sys.argv)!=6):
+    if(len(sys.argv)!=6 and len(sys.argv)!=7):
         print("Wrong arguments, please check comments in the script for usage")
         sys.exit(1)
 
@@ -132,9 +131,10 @@ def main():
     dir_out = sys.argv[2]
     dir_log = sys.argv[3]
     sample_count = int(sys.argv[4])
+    parallel_count = int(sys.argv[5])
     AOSP_DIR = None
-    if(len(sys.argv)==6):
-        AOSP_DIR = sys.argv[5]
+    if(len(sys.argv)==7):
+        AOSP_DIR = sys.argv[6]
     else:
         AOSP_DIR = "/data/guanxiong/android_source_7" # by default uses Android 7
 
@@ -145,7 +145,7 @@ def main():
     os.environ["ANDROID_ROOT"] = ANDROID_ROOT
     os.system("mkdir -p " + ANDROID_DATA)
     os.chdir(AOSP_DIR)
-    convert_files(dir_in, dir_out, dir_log, BOOT_IMAGE, sample_count)
+    convert_files(dir_in, dir_out, dir_log, BOOT_IMAGE, sample_count, parallel_count)
 
 if __name__ == '__main__':
     main()
