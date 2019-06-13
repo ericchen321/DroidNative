@@ -117,18 +117,16 @@ int main(int argc, char **argv, char **envp)
 	//
 	// For graph signature (ACFG) matching, but build signatures only
 	//
-	else if (argc == 4)
+	else if (argc == 3)
 	{
 		unsigned int max_threads;
 		max_threads = atoi(argv[1]);
-		string benign_filename = argv[2];
-		string malware_filename = argv[3];
+		string filename = argv[2];
 
 		// General signatures of all samples given
 		SimilarityDetector *sd = new SimilarityDetector();
 		
-		sd->GenerateSignatures(benign_filename, max_threads);
-		sd->GenerateSignatures(malware_filename, max_threads);
+		sd->GenerateSignatures(filename, max_threads);
 	}
 #ifdef __PRINT_ONLY_MAIL__
 	//
