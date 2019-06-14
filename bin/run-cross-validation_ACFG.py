@@ -18,9 +18,15 @@ import os
 from multiprocessing import Pool
 import itertools
 
+# build signatures of samples specified in <prefix>_parallel_<process_index>.txt,
+# eg. malware_samples_parallel_01.txt
 def run_droidnative_build_sigs_only(process_index, droidnative_exe_path, prefix):
     samples_name = prefix + '_parallel_' + ('%02d' % process_index) + '.txt'
     os.system(droidnative_exe_path + " 0 " + samples_name)
+
+# run testing on a fold
+def test_per_fold(virus_samples_name, files_to_check_name, result_name, threshold, droidnative_exe_path):
+    os.system(droidnative_exe_path + ' 0 ' + str(threshold) + ' ' + virus_samples_name + ' ' + files_to_check_name + ' > ' + result_name)
 
 def main():
     # check input arguments
@@ -73,10 +79,16 @@ def main():
         print('Malware samples signature generation done.')
     else:
         print('Running DroidNative-ACFG in testing mode...')
+        pool = Pool(num_fold)
+        test_per_fold_inputs = []
         for fold_count in range(0, num_fold):
             virus_samples_name = 'virus_samples_' + ('%02d' % fold_count) + '.txt'
             files_to_check_name = 'files_to_check_' + ('%02d' % fold_count) + '.txt'
-            os.system(droidnative_exe_path + ' 0 ' + threshold + ' ' + virus_samples_name + ' ' + files_to_check_name) #TODO: add multi-processing training
+            result_name = 'results_' + ('%02d' % fold_count) + '.txt'
+            test_per_fold_input = (virus_samples_name, files_to_check_name, result_name, threshold, droidnative_exe_path)
+            test_per_fold_inputs.append(test_per_fold_input)
+        # do testing per fold in parallel; number of parallel processes = num_fold
+        pool.starmap(test_per_fold, test_per_fold_inputs)
 
 if __name__ == '__main__':
     main()
