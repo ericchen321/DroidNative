@@ -520,7 +520,7 @@ void SimilarityDetector::LoadMalwareSignatures(string virus_samples, ML* ml){
 #ifdef __DEBUG__
 					cout << "SimilarityDetector::CheckBinariesUsingGraphMatching: Loading signatures from: " << testing_filename << "\n";
 #endif
-						ml->LoadACFGSignatures(testing_filename);
+						ml->LoadMalwareACFGSignatures(testing_filename);
 						delete (fileBuffer);
 					}
 					else
@@ -623,6 +623,10 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 						string testing_filename(getBaseName(filename) + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
 						vector <CFG *> cfgs = ml->LoadTestingACFGSignatures(testing_filename);
+						//Parser *parser = new Parser((uint8_t *)fileBuffer, size);
+						//parser->Parse(filename);
+						//vector <CFG *> cfgs = parser->BuildCFGs();
+						//delete(parser);
 
 //#define CHECK_BINARIES 1
 //#ifdef CHECK_BINARIES

@@ -126,6 +126,49 @@ void ML::SaveACFGSignatures(string filename)
 
 /*
  *
+ * Load the training signatures from a file, but also checks if
+ * any of the signatures match those already loaded
+ *
+ */
+uint64_t ML::LoadMalwareACFGSignatures(string filename){
+	vector<Block *> blocks;
+	vector<BackEdge *> backEdges;
+	CFG *_cfg = new CFG(blocks, backEdges, filename);
+	vector<CFG *> cfgs = _cfg->ReadFromFile(filename);
+	delete(_cfg);
+	IsoMorph *isom = new IsoMorph();
+
+	cout << "Loading malware signatures from file " << filename << ", ";
+	for (vector<CFG *>::iterator cfgi = cfgs.begin() ; cfgi != cfgs.end(); cfgi++)
+	{
+		CFG *cfg = *cfgi;
+		Graph *g = isom->BuildGraph(cfg);
+		bool MATCH = false;
+		for (int s = 0; s < (int)SignaturesACFG.size(); s++)
+		{
+			if (isom->MatchGraphs(SignaturesGraph[s], SignaturesACFG[s], g, cfg))
+			{
+				COMMON_CFGS++;
+				MATCH = true;
+				delete (g);
+				delete (cfg);
+				break;
+			}
+		}
+		if (MATCH == false)
+		{
+			SignaturesACFG.push_back(cfg);
+			SignaturesGraph.push_back(g);
+		}
+	}
+	printf("%d Signatures loaded\n", (int)SignaturesACFG.size());
+
+	delete (isom);
+	return (SignaturesACFG.size());
+}
+
+/*
+ *
  * Load the training signatures from a file
  *
  */
@@ -312,29 +355,24 @@ uint64_t ML::LoadSWODSignatures(string filename)
 
 void ML::BuildDataUsingGraphMatching(vector <CFG *> cfgs)
 {
+	/* remove existing ACFG signatures */
+	for (int i = 0; i < SignaturesACFG.size(); i++)
+		delete (SignaturesACFG[i]);
+	for (int i = 0; i < SignaturesGraph.size(); i++)
+		delete (SignaturesGraph[i]);
+	SignaturesACFG.erase(SignaturesACFG.begin(), SignaturesACFG.end());
+	SignaturesACFG.clear();
+	SignaturesGraph.erase(SignaturesGraph.begin(), SignaturesGraph.end());
+	SignaturesGraph.clear();
+
 	IsoMorph *isom = new IsoMorph();
 
 	for (vector<CFG *>::iterator cfgi = cfgs.begin() ; cfgi != cfgs.end(); cfgi++)
 	{
 		CFG *cfg = *cfgi;
-		Graph *g = isom->BuildGraph(cfg);
-		bool MATCH = false;
-		for (int s = 0; s < (int)SignaturesACFG.size(); s++)
-		{
-			if (isom->MatchGraphs(SignaturesGraph[s], SignaturesACFG[s], g, cfg))
-			{
-				COMMON_CFGS++;
-				MATCH = true;
-				delete (g);
-				delete (cfg);
-				break;
-			}
-		}
-		if (MATCH == false)
-		{
-			SignaturesACFG.push_back(cfg);
-			SignaturesGraph.push_back(g);
-		}
+		//Graph *g = isom->BuildGraph(cfg);
+		SignaturesACFG.push_back(cfg);
+		// SignaturesGraph.push_back(g); no need to build graph for now
 	}
 
    delete (isom);

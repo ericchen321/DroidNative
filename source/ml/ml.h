@@ -101,6 +101,7 @@ public:
 	void BenignUsingSignatureMatching(SIGNATURE *sig, uint32_t filenumber, double VERTICAL_SIGNATURE_DIFF, double HORIZONTAL_SIGNATURE_DIFF);
 	void SaveACFGSignatures(string filename);
 	uint64_t LoadACFGSignatures(string filename);
+	uint64_t LoadMalwareACFGSignatures(string filename);
 	vector<CFG *> LoadTestingACFGSignatures(string filename);
 	void SaveSWODSignatures(string filename); // NOT IMPLEMENTED
 	uint64_t LoadSWODSignatures(string filename); // NOT IMPLEMENTED
