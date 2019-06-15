@@ -61,15 +61,15 @@ elsif ( $OS =~ m/.*linux.*/i )
       print "------------------------------\n";
       print "Building DroidNative-ACFG\n\n";
       system ($cmd);
-      $cmd = sprintf("make -s -f Makefile-SWOD clean_all \n make -s -f Makefile-SWOD all");
-      print "------------------------------\n";
-      print "Building DroidNative-SWOD\n\n";
-      system ($cmd);
-      $cmd = sprintf("make -s -f Makefile-Only-MAIL clean_all \n make -s -f Makefile-Only-MAIL all");
-      print "------------------------------\n";
-      print "Building DroidNative-SWOD\n\n";
-      system ($cmd);
-      print "------------------------------\n";
+      #$cmd = sprintf("make -s -f Makefile-SWOD clean_all \n make -s -f Makefile-SWOD all");
+      #print "------------------------------\n";
+      #print "Building DroidNative-SWOD\n\n";
+      #system ($cmd);
+      #$cmd = sprintf("make -s -f Makefile-Only-MAIL clean_all \n make -s -f Makefile-Only-MAIL all");
+      #print "------------------------------\n";
+      #print "Building DroidNative-ONLY-MAIL\n\n";
+      #system ($cmd);
+      #print "------------------------------\n";
    }
    else
    {
