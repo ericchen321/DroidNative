@@ -44,10 +44,18 @@ def partition_list(list, n):
 
 # extract SDK version info of given apk file
 def extract_sdk_version(apk_name):
-    versionInfo = None
-    os.system("aapt dump badging " + apk_name + " | grep sdkVersion")
-    os.system("aapt dump badging " + apk_name + " | grep minSdkVersion")
-    os.system("aapt dump badging " + apk_name + " | grep targetSdkVersion")
+    # run aapt
+    aapt_results = subprocess.run('aapt list -a ' + apk_name + ' | grep "SdkVersion"', stdout = subprocess.PIPE, shell = True).stdout.decode()
+    # search minSdkVersion
+    search_min_sdk = re.search(r'(minSdkVersion.+=\(type.+\))(.+)', aapt_results)
+    if search_min_sdk:
+        print('minSdkVersion is ' + str(int(search_min_sdk.group(2), 0)))
+    search_target_sdk = re.search(r'(targetSdkVersion.+=\(type.+\))(.+)', aapt_results)
+    if search_target_sdk:
+        print('targetSdkVersion is ' + str(int(search_target_sdk.group(2), 0)))
+    search_max_sdk = re.search(r'(maxSdkVersion.+=\(type.+\))(.+)', aapt_results)
+    if search_max_sdk:
+        print('maxSdkVersion is ' + str(int(search_max_sdk.group(2), 0)))
 
 # identify given apk's verification errors and lock errors from 
 # dex2oat and oatdump's terminal message. Returns 1 if got any errors
