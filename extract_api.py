@@ -3,9 +3,10 @@
 #         Junbin Zhang
 # Usage: 
 # 1st param: path to directory where apk samples are stored
-# 2nd param: path to file where file-minSdk-targetSdk table is to be stored
+# 2nd param: path to file where file-minSdk-targetSdk-maxSdk table is to be stored
 # 3rd param: path to file where target api-count table is to be stored
 # 4th param: path to file where min api-count table is to be stored
+# 5th param: path to file where max api-count table is to be stored
 
 import sys
 import glob
@@ -17,13 +18,15 @@ source_dir = sys.argv[1]
 result_file_path = sys.argv[2]
 target_stat_file_path = sys.argv[3]
 min_stat_file_path = sys.argv[4]
+max_stat_file_path = sys.argv[5]
 
 samples = glob.glob(os.path.join(source_dir, '*.apk'))
 min_sdk_hist = []
 target_sdk_hist = []
+max_sdk_hist = []
 
 with open(result_file_path, "w") as result_file:
-    result_file.write('apk Path, minSdkVersion, targetSdkVersion\n')
+    result_file.write('apk Path, minSdkVersion, targetSdkVersion, maxSdkVersion\n')
     for filename in samples:
         log_results = filename + ','
         # run aapt
@@ -58,10 +61,24 @@ with open(result_file_path, "w") as result_file:
                 target_sdk_hist.append(target_sdk_entry) 
         else:
             log_results += ","
+        # search maxSdkVersion
+        search_max_sdk = re.search(r'(maxSdkVersion.+=\(type.+\))(.+)', aapt_results)
+        if search_max_sdk:
+            log_results += str(int(search_max_sdk.group(2), 0)) + ","
+            max_sdk_ver = int(str(int(search_max_sdk.group(2), 0)))
+            has_entry = False
+            for entry in max_sdk_hist:
+                if entry.get('api') == max_sdk_ver:
+                    entry['count'] = entry.get('count') + 1
+                    has_entry = True
+            if not has_entry:
+                max_sdk_entry = {'api': max_sdk_ver, 'count': int(1)}
+                max_sdk_hist.append(max_sdk_entry) 
         result_file.write(log_results + '\n')
 
 target_sdk_hist = sorted(target_sdk_hist, key = lambda i: i['api'])
 min_sdk_hist = sorted(min_sdk_hist, key = lambda i: i['api'])
+max_sdk_hist = sorted(max_sdk_hist, key = lambda i: i['api'])
 
 with open(target_stat_file_path, "w") as target_stat_file:
     target_stat_file.write('Target API Level, Count\n')
@@ -72,3 +89,8 @@ with open(min_stat_file_path, "w") as min_stat_file:
     min_stat_file.write('Min API Level, Count\n')
     for entry in min_sdk_hist:
         min_stat_file.write(str(entry.get('api')) + ',' + str(entry.get('count')) + '\n')
+
+with open(max_stat_file_path, "w") as max_stat_file:
+    max_stat_file.write('Max API Level, Count\n')
+    for entry in max_sdk_hist:
+        max_stat_file.write(str(entry.get('api')) + ',' + str(entry.get('count')) + '\n')
