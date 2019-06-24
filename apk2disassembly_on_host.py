@@ -25,7 +25,7 @@
 # 2nd param: path to output directory where txts are stored
 # 3rd param: path to output directory where running log files are stored
 # 4th param: number of samples to be converted. 0 means all
-# 5th param: number of processes to run preprocessing and feature extraction in parallel
+# 5th param: number of processes to do preprocessing in parallel
 # 6th param (optional): path to Android directory (example: /data/guanxiong/android_source_7). If not provided then use Android 7 build
 
 import sys
