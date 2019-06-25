@@ -90,6 +90,7 @@ def convert_file(apk_path, out_path, log_path, emulator_name):
     os.system("adb -s " + emulator_name + " shell rm " + apk_path_on_device + ".dex")
     os.system("adb -s " + emulator_name + " shell rm " + apk_path_on_device + ".vdex")
     os.system("adb -s " + emulator_name + " shell rm " + apk_path_on_device + ".dex.txt")
+    os.system("rm " + apk_name)
 
 # Convert apk files in in_path to txt files stroed in out_path; store terminal log
 # to log_path
