@@ -43,25 +43,31 @@ def partition_list(list, n):
         yield list[i:i + n]
 
 # extract SDK version info of given apk file
-def extract_sdk_version(apk_name):
+def extract_sdk_version(apk_name, log_path):
+    error_log_file = open(log_path + '/conversion_error.log', "a+")
     # run aapt
     aapt_results = subprocess.run('aapt list -a ' + apk_name + ' | grep "SdkVersion"', stdout = subprocess.PIPE, shell = True).stdout.decode()
     # search minSdkVersion
     search_min_sdk = re.search(r'(minSdkVersion.+=\(type.+\))(.+)', aapt_results)
     if search_min_sdk:
+        error_log_file.write('minSdkVersion is ' + str(int(search_min_sdk.group(2), 0)) + '\n')
         print('minSdkVersion is ' + str(int(search_min_sdk.group(2), 0)))
     search_target_sdk = re.search(r'(targetSdkVersion.+=\(type.+\))(.+)', aapt_results)
     if search_target_sdk:
+        error_log_file.write('targetSdkVersion is ' + str(int(search_target_sdk.group(2), 0)) + '\n')
         print('targetSdkVersion is ' + str(int(search_target_sdk.group(2), 0)))
     search_max_sdk = re.search(r'(maxSdkVersion.+=\(type.+\))(.+)', aapt_results)
     if search_max_sdk:
+        error_log_file.write('maxSdkVersion is ' + str(int(search_max_sdk.group(2), 0)) + '\n')
         print('maxSdkVersion is ' + str(int(search_max_sdk.group(2), 0)))
+    error_log_file.close()
 
 # identify given apk's verification errors and lock errors from 
 # dex2oat and oatdump's terminal message. Returns 1 if got any errors
 def identify_errors(apk_path, log_path):
     apk_name = os.path.basename(apk_path)
     log_file_dex2oat = open(log_path + '/' + apk_name + '.dex2oat.log', 'r')
+    error_log_file = open(log_path + '/conversion_error.log', "a+")
     verification_error = False
     lock_verification_error = False
     oat_file_gen_error = False
@@ -70,17 +76,22 @@ def identify_errors(apk_path, log_path):
     line_count = 0
     for line in log_file_dex2oat.readlines():
         if (not verification_error) and re.search('verification error', line, re.IGNORECASE):
+            error_log_file.write("File " + apk_path + " got verification error" + "\n")
             print("File " + apk_path + " got verification error")
             verification_error = True
         if (not lock_verification_error) and re.search('failed lock verification', line, re.IGNORECASE):
+            error_log_file.write("File " + apk_path + " got lock verification error" + "\n")
             print("File " + apk_path + " got lock verification error")
             lock_verification_error = True
         if (not oat_file_gen_error) and re.search('Failed to open', line, re.IGNORECASE):
+            error_log_file.write("File " + apk_path + " failed to have its oat and txt file produced" + "\n")
             print("File " + apk_path + " failed to have its oat and txt file produced")
             oat_file_gen_error = True
         line_count += 1
         if line_count >= 100:
             break
+    log_file_dex2oat.close()
+    error_log_file.close()
 
     return (verification_error or lock_verification_error or oat_file_gen_error)
 
@@ -99,7 +110,7 @@ def convert_file(apk_path, out_path, log_path, BOOT_IMAGE):
     log_file_dex2oat.close()
     log_file_oatdump.close()
     if identify_errors(apk_path, log_path):
-        extract_sdk_version(apk_name)
+        extract_sdk_version(apk_name, log_path)
     os.system("rm " + apk_name)
     os.system("rm " + apk_name + ".dex")
 
