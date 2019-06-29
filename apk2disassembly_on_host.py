@@ -46,7 +46,7 @@ def partition_list(list, n):
 def extract_sdk_version(apk_name, log_path):
     error_log_file = open(log_path + '/conversion_error.log', "a+")
     # run aapt
-    aapt_results = subprocess.run('aapt dump badging ' + apk_name + ' | grep "SdkVersion"', stdout = subprocess.PIPE, shell = True).stdout.decode()
+    aapt_results = subprocess.run('aapt list -a ' + apk_name + ' | grep "SdkVersion"', stdout = subprocess.PIPE, shell = True).stdout.decode()
     # search minSdkVersion
     search_min_sdk = re.search(r'(minSdkVersion.+=\(type.+\))(.+)', aapt_results)
     if search_min_sdk:
