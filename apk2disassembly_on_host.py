@@ -46,7 +46,7 @@ def partition_list(list, n):
 def extract_sdk_version(apk_name, log_path):
     error_log_file = open(log_path + '/conversion_error.log', "a+")
     # run aapt
-    aapt_results = subprocess.run('aapt list -a ' + apk_name + ' | grep "SdkVersion"', stdout = subprocess.PIPE, shell = True).stdout.decode()
+    aapt_results = subprocess.run('aapt dump badging ' + apk_name + ' | grep "SdkVersion"', stdout = subprocess.PIPE, shell = True).stdout.decode()
     # search minSdkVersion
     search_min_sdk = re.search(r'(minSdkVersion.+=\(type.+\))(.+)', aapt_results)
     if search_min_sdk:
@@ -105,14 +105,18 @@ def convert_file(apk_path, out_path, log_path, BOOT_IMAGE):
 
     log_file_dex2oat = open(log_path + '/' + apk_name + '.dex2oat.log', 'w')
     log_file_oatdump = open(log_path + '/' + apk_name + '.oatdump.log', 'w')
+    log_file_compression = open(log_path + '/' + apk_name + '.compression.log', 'w')
     subprocess.run("out/host/linux-x86/bin/dex2oat --runtime-arg -classpath --runtime-arg " + apk_name + " --instruction-set=arm " + "--runtime-arg " + "-Xrelocate " + "--host " + "--boot-image=" + BOOT_IMAGE + " --dex-file=" + apk_name + " --oat-file=" + apk_name + ".dex", stdout=log_file_dex2oat, stderr=log_file_dex2oat, universal_newlines=True, shell=True)
     subprocess.run("out/host/linux-x86/bin/oatdump --oat-file=" + apk_name + ".dex" + " --instruction-set=arm" + " --output=" + out_path + "/" + apk_name + ".dex" + ".txt", stdout=log_file_oatdump, stderr=log_file_oatdump, universal_newlines=True, shell=True)
+    subprocess.run('zip ' + out_path + '/' + apk_name + '.dex.txt.zip ' + out_path + '/' + apk_name + '.dex.txt', stdout=log_file_compression, stderr=log_file_compression, shell=True)
     log_file_dex2oat.close()
     log_file_oatdump.close()
+    log_file_compression.close()
     if identify_errors(apk_path, log_path):
         extract_sdk_version(apk_name, log_path)
     os.system("rm " + apk_name)
     os.system("rm " + apk_name + ".dex")
+    os.system('rm ' + out_path + '/' + apk_name + '.dex.txt')
 
 # Convert apk files in in_path to txt files stroed in out_path; store terminal log
 # to log_path
