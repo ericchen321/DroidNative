@@ -911,16 +911,15 @@ void SimilarityDetector::GenerateSignatures(string samples, int max_threads, str
 					delete (parser);
 					delete (fileBuffer);
 #endif
-#ifdef __TRAINING_TIME__
-					end = clock();
-					time += (end - start);
-#endif
 					// save signatures of sample to its signature file
 					string training_data_filename(sig_dir + "/" + filename_txt + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
 					// std::cout << "training data filename is: " << training_data_filename << endl;
 					ml->SaveACFGSignatures(training_data_filename);
 					delete(ml);
-
+#ifdef __TRAINING_TIME__
+					end = clock();
+					time += (end - start);
+#endif
 					// zip signature file
 					string training_data_filename_zipped(training_data_filename + ".zip");
 					string zip_training_data_command("zip " + training_data_filename_zipped + " " + training_data_filename);
