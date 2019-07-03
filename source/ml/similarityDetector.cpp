@@ -815,6 +815,17 @@ string SimilarityDetector::getBaseName(const string& s) {
    return("");
 }
 
+/* get directory path of given full path to file
+ * from http://www.cplusplus.com/reference/string/string/find_last_of/
+ */
+string SimilarityDetector::getFolderPath(const string& str)
+{
+  size_t found;
+  cout << "Splitting: " << str << endl;
+  found=str.find_last_of("/\\");
+  return str.substr(0,found);
+}
+
 /*
  * ------------------------------------------------------------------------------------------------------
  *
@@ -824,7 +835,7 @@ string SimilarityDetector::getBaseName(const string& s) {
  *
  * ------------------------------------------------------------------------------------------------------
  */
-void SimilarityDetector::GenerateSignatures(string samples, int max_threads){
+void SimilarityDetector::GenerateSignatures(string samples, int max_threads, string sig_dir){
 #ifdef __TRAINING_TIME__
 	clock_t start = 0, end = 0;
 	double time = 0.0;
@@ -850,12 +861,32 @@ void SimilarityDetector::GenerateSignatures(string samples, int max_threads){
 			if ( (c < 3*MAX_FILENAME) && (fileBufferP[n] == '\n' || fileBufferP[n] == '\r') )
 			{
 				filename[c] = '\0';
-				ifstream file(filename, ios::in | ios::binary | ios::ate);
+				// std::cout << "filename is " << filename << '\n';
+				int i;
+				char filename_txt_outside[3*MAX_FILENAME+1];
+				for (i=0; filename[i] != '\0'; i++){
+					filename_txt_outside[i] = filename[i];
+				}
+				filename_txt_outside[i-4] = '\0';
+				string filename_txt(getBaseName(filename_txt_outside));
+				// std::cout << "filename_txt is " << filename_txt << '\n';
+
+				// extract txt file inside zip file
+				char unzip_command[(3*MAX_FILENAME+1)*2+7];
+				strcpy(unzip_command, "unzip ");
+				for(i=0; filename[i] != '\0'; i++){
+					unzip_command[i+6] = filename[i];
+				}
+				unzip_command[i+6] = '\0';
+				std::cout << "Unzipping disassembly file: " << unzip_command << endl;
+				system(unzip_command);
+
+				ifstream file(filename_txt.c_str(), ios::in | ios::binary | ios::ate);
 				if (file.is_open())
 				{
 					unsigned int size = (unsigned int)file.tellg();         // How much buffer we need for the file
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-					printf("Generating signatures from file: %s\n", filename);
+					printf("Generating signatures from file: %s\n", filename_txt.c_str());
 					fflush(stdout);
 #endif
 					file.seekg (0, ios::beg);
@@ -873,7 +904,7 @@ void SimilarityDetector::GenerateSignatures(string samples, int max_threads){
 #else
 					ML *ml = new ML(max_threads, THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING);
 					Parser *parser = new Parser((uint8_t *)fileBuffer, size);
-					parser->Parse(filename);
+					parser->Parse(filename_txt);
 					vector <CFG *> cfgs = parser->BuildCFGs();
 					ml->BuildDataUsingGraphMatching(cfgs);
 
@@ -885,12 +916,33 @@ void SimilarityDetector::GenerateSignatures(string samples, int max_threads){
 					time += (end - start);
 #endif
 					// save signatures of sample to its signature file
-					string training_data_filename(getBaseName(filename) + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
+					string training_data_filename(sig_dir + "/" + filename_txt + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
+					// std::cout << "training data filename is: " << training_data_filename << endl;
 					ml->SaveACFGSignatures(training_data_filename);
 					delete(ml);
+
+					// zip signature file
+					string training_data_filename_zipped(training_data_filename + ".zip");
+					string zip_training_data_command("zip " + training_data_filename_zipped + " " + training_data_filename);
+					std::cout << "Zipping signature file: " << zip_training_data_command << endl;
+					system(zip_training_data_command.c_str());
+
+					// remove unzipped signature file
+					string remove_unzipped_sig_command("rm " + training_data_filename);
+					system(remove_unzipped_sig_command.c_str());
 				}
 				else
-					cout << "Error:SimilarityDetector::GenerateSignatures: Cannot open the file: " << filename << "\n";
+					std::cout << "Error:SimilarityDetector::GenerateSignatures: Cannot open the file: " << filename_txt << "\n";
+
+				// remove txt file
+				char remove_txt_command[3*MAX_FILENAME+4];
+				strcpy(remove_txt_command, "rm ");
+				for(i=0; filename_txt[i] != '\0'; i++){
+					remove_txt_command[i+3] = filename_txt[i];
+				}
+				remove_txt_command[i+3] = '\0';
+				// std::cout << "remove txt command is: " << remove_txt_command << endl;
+				system(remove_txt_command);
 
 				c = 0;
 				filename[c] = '\0';
@@ -937,7 +989,7 @@ cout  << "sig_cfgs.size(): " << sig_cfgs.size() << endl;
 	total_training_time = ((double)(time))/CLOCKS_PER_SEC;
 	//cout << "Common CFGs = " << ml->GetCommonCFGs() << endl;
 	//cout << "Distinguish CFGs = " << ml->GetDistinguishCFGs() << endl;
-	cout << "SimilarityDetector::GenerateSignatures: Total Feature Extraction time: " << total_training_time << " second(s)\n";
+	cout << "SimilarityDetector::GenerateSignatures: Total Feature Extraction time: " << total_training_time << " second(s)\n\n";
 #endif
 
 #ifdef __DEBUG__

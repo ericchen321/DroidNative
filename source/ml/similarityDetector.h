@@ -29,6 +29,8 @@
 #include "../mail/patterns.h"
 #include "../mail/signature.h"
 #include "../include/swod.h"
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct
 {
@@ -63,6 +65,7 @@ private:
 	void TrainDataUsingSignatureMatching(string filenameP, ML *ml);
 	void BuildGraphs(ML *ml, char *filename, char *fileBuffer, unsigned int size);
 	string getBaseName(const string& s);
+	string getFolderPath(const string& s);
 
 public:
 	SimilarityDetector();
@@ -71,7 +74,7 @@ public:
 	void SetThreshold(float threshold_gm);
 	void CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, unsigned int max_threads);
 	void CheckBinariesUsingSignatureMatching(string malware_samples, string benign_samples, string virus_samples, string files_to_check, unsigned int max_threads);
-	void GenerateSignatures(string samples, int max_threads);
+	void GenerateSignatures(string samples, int max_threads, string sig_dir);
 };
 
 #endif // __SIMILARITY_DETECTOR_H__
