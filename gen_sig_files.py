@@ -14,13 +14,31 @@ import subprocess
 import glob
 from multiprocessing import Pool
 import itertools
+import re
 
-# build signatures of samples specified in <prefix>_parallel_<process_index>.txt,
-# eg. malware_samples_parallel_01.txt
-def run_droidnative_build_sigs_only(process_index, dir_droidnative_bin, sig_dir, log_dir, prefix):
-    samples_name = prefix + '_parallel_' + ('%02d' % process_index) + '.txt'
-    print("command: " + "./DroidNative-ACFG.exe" + " 0 " + samples_name)
-    os.system("./DroidNative-ACFG.exe" + " 0 " + sig_dir + " " + samples_name + " 2>&1 | tee " + log_dir + "/" + samples_name + ".siggen.log")
+# Yield successive n-sized chunks from list
+def partition_list(list, n):
+    for i in range(0, len(list), n):
+        yield list[i:i + n]
+
+# identify errors from siggen.log file and record in <log_path>/siggen_error.log
+def identify_errors(per_apk_log_file_path, log_path):
+    error_log_file = open(log_path + '/siggen_error.log', 'a+')
+    per_apk_error_log_file = open(per_apk_log_file_path, 'r')
+    apk_path = os.path.basename(per_apk_log_file_path).rstrip('.siggen.log')
+    for line in per_apk_error_log_file:
+        if re.search('Error:SimilarityDetector::GenerateSignatures: Cannot open the file', line):
+            error_log_file.write('File ' + apk_path + ' signature generation failed due to C++ I/O error')
+            break
+    per_apk_error_log_file.close()
+    error_log_file.close()
+
+# build signatures of given sample, write to file, and generate log file
+def run_droidnative_build_sigs_only(zipped_txt_path, dir_droidnative_bin, sig_dir, log_dir):
+    log_file_path = log_dir + "/" + os.path.basename(zipped_txt_path).rstrip('.dex.txt.zip') + ".siggen.log"
+    print("Command: " + "./DroidNative-ACFG.exe" + " 0 " + sig_dir + " " + zipped_txt_path + " 2>&1 | tee " + log_file_path)
+    os.system("./DroidNative-ACFG.exe" + " 0 " + sig_dir + " " + zipped_txt_path + " 2>&1 | tee " + log_file_path)
+    identify_errors(log_file_path, log_dir)
 
 txt_dir = sys.argv[1]
 sig_dir = sys.argv[2]
@@ -34,11 +52,7 @@ if len(sys.argv) == 7:
 else:
     print("no exclusion file given. Will feature-extract all files.")
 
-# remove existing sample lists
-os.chdir(dir_droidnative_bin)
-os.system("rm " + dir_droidnative_bin + "/" + "preprocessed_samples" + "_parallel_*")
-
-# count num of processes actually needed
+# partition samples
 samples = glob.glob(txt_dir + '/*.zip')
 if exclusion_txts_path != "":
     exclusion_file = open(exclusion_txts_path, 'r')
@@ -49,26 +63,10 @@ if exclusion_txts_path != "":
                 samples.remove(sample)
                 print("Sample " + sample + " has been removed from feature extraction.")
     exclusion_file.close()
-samples_per_partition = int(len(samples) // int(parallel_count))
-sample_count = 0
-for sample_path in samples:
-    sample_count += 1
-processes_needed = len(samples) // samples_per_partition
-if len(samples) % samples_per_partition != int(0):
-    processes_needed += 1
-print("Given number of processes: " + str(parallel_count) + "; actual number of processes: " + str(processes_needed) + ".")
+partitions = list(partition_list(samples, parallel_count))
 
-# produce sample lists
-sample_count = 0
-for process_index in range(0, processes_needed):
-    sample_file_name = 'preprocessed_samples' + '_parallel_' + ('%02d' % process_index) + '.txt'
-    sample_file = open(sample_file_name, 'w')
-    file_count = 0
-    for file_count in range(0, samples_per_partition):
-        if(sample_count < len(samples)):
-            sample_file.write(samples[sample_count] + '\n')
-            sample_count += 1
-    sample_file.close()
-
-pool = Pool(processes_needed)
-pool.starmap(run_droidnative_build_sigs_only, itertools.product(range(0, processes_needed), [dir_droidnative_bin], [sig_dir], [log_dir], ['preprocessed_samples']))
+# run DroidNative
+os.chdir(dir_droidnative_bin)
+pool = Pool(parallel_count)
+for partition in partitions:
+    pool.starmap(run_droidnative_build_sigs_only, itertools.product(partition, [dir_droidnative_bin], [sig_dir], [log_dir]))

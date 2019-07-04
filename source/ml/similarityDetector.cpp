@@ -835,7 +835,7 @@ string SimilarityDetector::getFolderPath(const string& str)
  *
  * ------------------------------------------------------------------------------------------------------
  */
-void SimilarityDetector::GenerateSignatures(string samples, int max_threads, string sig_dir){
+void SimilarityDetector::GenerateSignatures(string sample, int max_threads, string sig_dir){
 #ifdef __TRAINING_TIME__
 	clock_t start = 0, end = 0;
 	double time = 0.0;
@@ -844,117 +844,88 @@ void SimilarityDetector::GenerateSignatures(string samples, int max_threads, str
 #ifdef __MULTI_THREAD__
 	uint64_t CountSignatures = 0;
 #endif
-	ifstream fileP(samples.c_str(), ios::in | ios::binary | ios::ate);
-	if (fileP.is_open())
-	{
-		unsigned int fileSize = (unsigned int)fileP.tellg();                // How much buffer we need for the file
-		fileP.seekg (0, ios::beg);
-		char *fileBufferP = new char[fileSize+1];
-		fileP.read(fileBufferP, fileSize);                                  // Read the file into the buffer
-		fileP.close();
-		fileBufferP[fileSize] = '\0';
-
+		int i;
 		char filename[3*MAX_FILENAME+1];
-		int c = 0;
-		for (unsigned int n = 0; n < fileSize; n++)
+		strcpy(filename, sample.c_str());
+		char filename_txt_outside[3*MAX_FILENAME+1];
+		for (i=0; filename[i] != '\0'; i++){
+			filename_txt_outside[i] = filename[i];
+		}
+		filename_txt_outside[i-4] = '\0';
+		string filename_txt(getBaseName(filename_txt_outside));
+		// std::cout << "filename_txt is " << filename_txt << '\n';
+
+		// extract txt file inside zip file
+		char unzip_command[(3*MAX_FILENAME+1)*2+7];
+		strcpy(unzip_command, "unzip ");
+		for(i=0; filename[i] != '\0'; i++){
+			unzip_command[i+6] = filename[i];
+		}
+		unzip_command[i+6] = '\0';
+		std::cout << "Unzipping disassembly file: " << unzip_command << endl;
+		system(unzip_command);
+
+		ifstream file(filename_txt.c_str(), ios::in | ios::binary | ios::ate);
+		if (file.is_open())
 		{
-			if ( (c < 3*MAX_FILENAME) && (fileBufferP[n] == '\n' || fileBufferP[n] == '\r') )
-			{
-				filename[c] = '\0';
-				// std::cout << "filename is " << filename << '\n';
-				int i;
-				char filename_txt_outside[3*MAX_FILENAME+1];
-				for (i=0; filename[i] != '\0'; i++){
-					filename_txt_outside[i] = filename[i];
-				}
-				filename_txt_outside[i-4] = '\0';
-				string filename_txt(getBaseName(filename_txt_outside));
-				// std::cout << "filename_txt is " << filename_txt << '\n';
-
-				// extract txt file inside zip file
-				char unzip_command[(3*MAX_FILENAME+1)*2+7];
-				strcpy(unzip_command, "unzip ");
-				for(i=0; filename[i] != '\0'; i++){
-					unzip_command[i+6] = filename[i];
-				}
-				unzip_command[i+6] = '\0';
-				std::cout << "Unzipping disassembly file: " << unzip_command << endl;
-				system(unzip_command);
-
-				ifstream file(filename_txt.c_str(), ios::in | ios::binary | ios::ate);
-				if (file.is_open())
-				{
-					unsigned int size = (unsigned int)file.tellg();         // How much buffer we need for the file
+			unsigned int size = (unsigned int)file.tellg();         // How much buffer we need for the file
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-					printf("Generating signatures from file: %s\n", filename_txt.c_str());
-					fflush(stdout);
+			printf("Generating signatures from file: %s\n", filename_txt.c_str());
+			fflush(stdout);
 #endif
-					file.seekg (0, ios::beg);
-					char *fileBuffer = new char[size+1];
-					file.read(fileBuffer, size);                           // Read the file into the buffer
-					file.close();
-					fileBuffer[size] = '\0';
+			file.seekg (0, ios::beg);
+			char *fileBuffer = new char[size+1];
+			file.read(fileBuffer, size);                           // Read the file into the buffer
+			file.close();
+			fileBuffer[size] = '\0';
 
 #ifdef __TRAINING_TIME__
-					start = clock();
+			start = clock();
 #endif
 #ifdef __MULTI_THREAD__
-					BuildGraphs(ml, filename, fileBuffer, size);
-					CountSignatures++;
+			BuildGraphs(ml, filename, fileBuffer, size);
+			CountSignatures++;
 #else
-					ML *ml = new ML(max_threads, THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING);
-					Parser *parser = new Parser((uint8_t *)fileBuffer, size);
-					parser->Parse(filename_txt);
-					vector <CFG *> cfgs = parser->BuildCFGs();
-					ml->BuildDataUsingGraphMatching(cfgs);
+			ML *ml = new ML(max_threads, THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING);
+			Parser *parser = new Parser((uint8_t *)fileBuffer, size);
+			parser->Parse(filename_txt);
+			vector <CFG *> cfgs = parser->BuildCFGs();
+			ml->BuildDataUsingGraphMatching(cfgs);
 
-					delete (parser);
-					delete (fileBuffer);
+			delete (parser);
+			delete (fileBuffer);
 #endif
-					// save signatures of sample to its signature file
-					string training_data_filename(sig_dir + "/" + filename_txt + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
-					// std::cout << "training data filename is: " << training_data_filename << endl;
-					ml->SaveACFGSignatures(training_data_filename);
-					delete(ml);
+			// save signatures of sample to its signature file
+			string training_data_filename(sig_dir + "/" + filename_txt + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
+			// std::cout << "training data filename is: " << training_data_filename << endl;
+			ml->SaveACFGSignatures(training_data_filename);
+			delete(ml);
 #ifdef __TRAINING_TIME__
-					end = clock();
-					time += (end - start);
+			end = clock();
+			time += (end - start);
 #endif
-					// zip signature file
-					string training_data_filename_zipped(training_data_filename + ".zip");
-					string zip_training_data_command("zip " + training_data_filename_zipped + " " + training_data_filename);
-					std::cout << "Zipping signature file: " << zip_training_data_command << endl;
-					system(zip_training_data_command.c_str());
+			// zip signature file
+			string training_data_filename_zipped(training_data_filename + ".zip");
+			string zip_training_data_command("zip " + training_data_filename_zipped + " " + training_data_filename);
+			std::cout << "Zipping signature file: " << zip_training_data_command << endl;
+			system(zip_training_data_command.c_str());
 
-					// remove unzipped signature file
-					string remove_unzipped_sig_command("rm " + training_data_filename);
-					system(remove_unzipped_sig_command.c_str());
-				}
-				else
-					std::cout << "Error:SimilarityDetector::GenerateSignatures: Cannot open the file: " << filename_txt << "\n";
-
-				// remove txt file
-				char remove_txt_command[3*MAX_FILENAME+4];
-				strcpy(remove_txt_command, "rm ");
-				for(i=0; filename_txt[i] != '\0'; i++){
-					remove_txt_command[i+3] = filename_txt[i];
-				}
-				remove_txt_command[i+3] = '\0';
-				// std::cout << "remove txt command is: " << remove_txt_command << endl;
-				system(remove_txt_command);
-
-				c = 0;
-				filename[c] = '\0';
-				if ( n < (fileSize-1) && (fileBufferP[n+1] == '\n' || fileBufferP[n+1] == '\r') )
-					n++;
-			}
-			else if (c < 3*MAX_FILENAME)
-				filename[c++] = fileBufferP[n];
-			else
-				c = 0;
+			// remove unzipped signature file
+			string remove_unzipped_sig_command("rm " + training_data_filename);
+			system(remove_unzipped_sig_command.c_str());
 		}
-		delete (fileBufferP);
-
+		else{
+			std::cout << "Error:SimilarityDetector::GenerateSignatures: Cannot open the file: " << filename_txt << "\n";
+		}
+		// remove txt file
+		char remove_txt_command[3*MAX_FILENAME+4];
+		strcpy(remove_txt_command, "rm ");
+		for(i=0; filename_txt[i] != '\0'; i++){
+			remove_txt_command[i+3] = filename_txt[i];
+		}
+		remove_txt_command[i+3] = '\0';
+		std::cout << "Removed disassembly file: " << remove_txt_command << endl;
+		system(remove_txt_command);
 #ifdef __DEBUG__
 		for (int s = 0; s < (int)Signatures.size(); s++)
 		{
@@ -969,10 +940,6 @@ cout  << "sig_cfgs.size(): " << sig_cfgs.size() << endl;
 			}
 		}
 #endif
-	}
-	else
-		cout << "Error:SimilarityDetector::GenerateSignatures: Cannot open the file: " << samples << "\n";
-
 #ifdef __MULTI_THREAD__
 	while (THREAD_BUILD_GRAPHS > 0)
 	{
@@ -986,9 +953,7 @@ cout  << "sig_cfgs.size(): " << sig_cfgs.size() << endl;
 #endif
 #ifdef __TRAINING_TIME__
 	total_training_time = ((double)(time))/CLOCKS_PER_SEC;
-	//cout << "Common CFGs = " << ml->GetCommonCFGs() << endl;
-	//cout << "Distinguish CFGs = " << ml->GetDistinguishCFGs() << endl;
-	cout << "SimilarityDetector::GenerateSignatures: Total Feature Extraction time: " << total_training_time << " second(s)\n\n";
+	cout << "SimilarityDetector::GenerateSignatures: Feature extraction time of this sample: " << total_training_time << " second(s)\n\n";
 #endif
 
 #ifdef __DEBUG__
