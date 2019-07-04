@@ -71,4 +71,4 @@ for process_index in range(0, processes_needed):
     sample_file.close()
 
 pool = Pool(processes_needed)
-pool.starmap(run_droidnative_build_sigs_only, itertools.product(range(0, process_index+1), [dir_droidnative_bin], [sig_dir], [log_dir], ['preprocessed_samples']))
+pool.starmap(run_droidnative_build_sigs_only, itertools.product(range(0, processes_needed), [dir_droidnative_bin], [sig_dir], [log_dir], ['preprocessed_samples']))
