@@ -28,7 +28,7 @@ def identify_errors(per_apk_log_file_path, log_path):
     apk_path = os.path.basename(per_apk_log_file_path).rstrip('.siggen.log')
     for line in per_apk_error_log_file:
         if re.search('Error:SimilarityDetector::GenerateSignatures: Cannot open the file', line):
-            error_log_file.write('File ' + apk_path + ' signature generation failed due to C++ I/O error')
+            error_log_file.write('File ' + apk_path + ' signature generation failed due to C++ I/O error\n')
             break
     per_apk_error_log_file.close()
     error_log_file.close()
