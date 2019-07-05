@@ -138,7 +138,7 @@ uint64_t ML::LoadMalwareACFGSignatures(string filename){
 	delete(_cfg);
 	IsoMorph *isom = new IsoMorph();
 
-	cout << "Loading malware signatures from file " << filename << ", ";
+	cout << "Loading malware signatures from file " << filename << ", " << std::flush;
 	for (vector<CFG *>::iterator cfgi = cfgs.begin() ; cfgi != cfgs.end(); cfgi++)
 	{
 		CFG *cfg = *cfgi;
