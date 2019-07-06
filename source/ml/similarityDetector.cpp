@@ -472,7 +472,7 @@ void SimilarityDetector::BuildGraphs(ML *ml, char *filename, char *fileBuffer, u
 
 /* load malware signatures of samples in virus_samples to given ML object
  */
-void SimilarityDetector::LoadMalwareSignatures(string virus_samples, ML* ml){
+void SimilarityDetector::LoadMalwareSignatures(string virus_samples, string sig_temp_dir, ML* ml){
 #ifdef __PROGRAM_OUTPUT_ENABLED__
 	cout << "--------------------------------------------------------------------\n";
 	cout << "Train Data Using Graph Matching . . .\nVirus sample file: " << virus_samples << " . . .\n";
@@ -507,24 +507,32 @@ void SimilarityDetector::LoadMalwareSignatures(string virus_samples, ML* ml){
 	#ifdef __DEBUG__
 					cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Checking file: " << filename << "\n";
 	#endif
-					ifstream file(filename, ios::in | ios::binary | ios::ate);
-					if (file.is_open())
-					{
-						unsigned int size = (unsigned int)file.tellg();         // How much buffer we need for the file
-						file.seekg (0, ios::beg);
-						char *fileBuffer = new char[size+1];
-						file.read(fileBuffer, size);                            // Read the file into the buffer
-						file.close();
-						fileBuffer[size] = '\0';
-						string testing_filename(getBaseName(filename) + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
-#ifdef __DEBUG__
-					cout << "SimilarityDetector::CheckBinariesUsingGraphMatching: Loading signatures from: " << testing_filename << "\n";
-#endif
-						ml->LoadMalwareACFGSignatures(testing_filename);
-						delete (fileBuffer);
+					// unzip the compressed signature file to current dir
+					char unzip_command[3*MAX_FILENAME+7];
+					strcpy(unzip_command, "unzip -j ");
+					int i;
+					for(i=0; filename[i] != '\0'; i++){
+						unzip_command[i+9] = filename[i];
 					}
-					else
-						cout << "Error:main: Cannot open the file: " << filename << "\n";
+					unzip_command[i+9] = '\0';
+					strcat(unzip_command, " -d ");
+					strcat(unzip_command, sig_temp_dir.c_str());
+#ifdef __PROGRAM_OUTPUT_ENABLED__
+					std::cout << "Unzipping signature file: " << unzip_command << endl;
+#endif
+					system(unzip_command);
+
+					// load in malware signature
+					string filename_base = getBaseName(filename);
+					string testing_filename(sig_temp_dir + "/" + filename_base.substr(0, filename_base.size()-4));
+					ml->LoadMalwareACFGSignatures(testing_filename);
+
+					// remove decompressed signature file
+					string remove_command("rm " + testing_filename);
+#ifdef __PROGRAM_OUTPUT_ENABLED__
+					std::cout << "Removing signature file: " << remove_command << endl;
+#endif
+					system(remove_command.c_str());
 
 					c = 0;
 					filename[c] = '\0';
@@ -553,7 +561,7 @@ void SimilarityDetector::LoadMalwareSignatures(string virus_samples, ML* ml){
  *
  * ------------------------------------------------------------------------------------------------------
  */
-void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, unsigned int max_threads)
+void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, string sig_temp_dir, unsigned int max_threads)
 {
 #ifdef __TESTING_TIME__
 	clock_t start = 0, end = 0;
@@ -562,7 +570,7 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 
 		ML *ml = new ML(max_threads, THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING);
-		LoadMalwareSignatures(virus_samples, ml);
+		LoadMalwareSignatures(virus_samples, sig_temp_dir, ml);
 
 #ifdef __TESTING_TIME__
 	end = clock();
@@ -604,53 +612,57 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #ifdef __DEBUG__
 					cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Checking file: " << filename << "\n";
 #endif
-					ifstream file(filename, ios::in | ios::binary | ios::ate);
-					if (file.is_open())
-					{
-						unsigned int size = (unsigned int)file.tellg();         // How much buffer we need for the file
-						file.seekg (0, ios::beg);
-						char *fileBuffer = new char[size+1];
-						file.read(fileBuffer, size);                            // Read the file into the buffer
-						file.close();
-						fileBuffer[size] = '\0';
-
+					// unzip the compressed signature file to current dir
+					char unzip_command[3*MAX_FILENAME+7];
+					strcpy(unzip_command, "unzip -j ");
+					int i;
+					for(i=0; filename[i] != '\0'; i++){
+						unzip_command[i+9] = filename[i];
+					}
+					unzip_command[i+9] = '\0';
+					strcat(unzip_command, " -d ");
+					strcat(unzip_command, sig_temp_dir.c_str());
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-						printf("Loading Signature of %s\n", filename);
-						fflush(stdout);
+					std::cout << "Unzipping signature file: " << unzip_command << endl;
+#endif
+					system(unzip_command);
+#ifdef __PROGRAM_OUTPUT_ENABLED__
+					printf("Loading Signature of %s\n", filename);
+					fflush(stdout);
 #endif
 #ifdef __TESTING_TIME__
-						start = clock();
+	start = clock();
 #endif
-						string testing_filename(getBaseName(filename) + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
-						vector <CFG *> cfgs = ml->LoadTestingACFGSignatures(testing_filename);
-						//Parser *parser = new Parser((uint8_t *)fileBuffer, size);
-						//parser->Parse(filename);
-						//vector <CFG *> cfgs = parser->BuildCFGs();
-						//delete(parser);
-
+					// loading tested sample's signatures
+					string filename_base = getBaseName(filename);
+					string testing_filename(sig_temp_dir + "/" + filename_base.substr(0, filename_base.size()-4));
+					vector <CFG *> cfgs = ml->LoadTestingACFGSignatures(testing_filename);
 //#define CHECK_BINARIES 1
 //#ifdef CHECK_BINARIES
 #ifdef __DEBUG__
-						cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Start building graph\n";
+	cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Start building graph\n";
 #endif
-						vector <Graph *> gs;
-						IsoMorph *isom = new IsoMorph();
-						for (int c = 0; c < (int)cfgs.size(); c++)
-						{
-							Graph *g = isom->BuildGraph(cfgs[c]);
-							gs.push_back(g);
-						}
-						delete (isom);
+					vector <Graph *> gs;
+					IsoMorph *isom = new IsoMorph();
+					for (int k = 0; k < (int)cfgs.size(); k++)
+					{
+						Graph *g = isom->BuildGraph(cfgs[k]);
+						gs.push_back(g);
+					}
+					delete (isom);
 #ifdef __DEBUG__
-						cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Graph done\n";
+	cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Graph done\n";
 #endif
-
-						FileReport *fr = new FileReport();
-						fr->filename = filename;
-						fr->filenumber = filenumber;
-						fr->benign = true;
-						FileReports.push_back(fr);
-						start = clock();
+#ifdef __TESTING_TIME__
+	end = clock();
+	time += (end - start);
+#endif
+					FileReport *fr = new FileReport();
+					fr->filename = filename;
+					fr->filenumber = filenumber;
+					fr->benign = true;
+					FileReports.push_back(fr);
+					start = clock();
 #ifdef __MULTI_THREAD__
 						while (THREAD_COUNT > (int)(MAX_THREADS - number_of_signatures))
 						{
@@ -662,35 +674,32 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 						}
 #endif
-						ml->BenignUsingGraphMatching(gs, cfgs, filenumber);
+					ml->BenignUsingGraphMatching(gs, cfgs, filenumber);
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-						if (FileReports[filenumber]->benign)
-							printf("File %s is benign\n\n", filename);
-						else
-							printf("File %s is/contain malware\n\n", filename);
-						fflush(stdout);
+					if (FileReports[filenumber]->benign)
+						printf("File %s is benign\n\n", filename);
+					else
+						printf("File %s is/contain malware\n\n", filename);
+					fflush(stdout);
 #endif
-						filenumber++;
+					filenumber++;
 #ifdef __DEBUG__
 						cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Done\n";
 #endif
-#ifdef __TESTING_TIME__
-						end = clock();
-						time += (end - start);
-#endif
 #ifdef __SINGLE_THREAD__
-						for (int c = 0; c < (int)cfgs.size(); c++)
-						{
-							delete (cfgs[c]);
-							delete (gs[c]);
-						}
-#endif
-//#endif
-						delete (fileBuffer);
+					for (int k = 0; k < (int)cfgs.size(); k++)
+					{
+						delete (cfgs[k]);
+						delete (gs[k]);
 					}
-					else
-						cout << "Error:main: Cannot open the file: " << filename << "\n";
 
+					// remove decompressed signature file
+					string remove_command("rm " + testing_filename);
+#ifdef __PROGRAM_OUTPUT_ENABLED__
+					std::cout << "Removing signature file: " << remove_command << endl;
+#endif
+					system(remove_command.c_str());
+#endif
 					c = 0;
 					filename[c] = '\0';
 					if ( n < (fileSize-1) && (fileBufferP[n+1] == '\n' || fileBufferP[n+1] == '\r') )

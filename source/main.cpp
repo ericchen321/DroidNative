@@ -99,19 +99,21 @@ int main(int argc, char **argv, char **envp)
 	//
 	// For graph signature (ACFG) matching
 	//
-	else if (argc == 5)
+	else if (argc == 6)
 	{
 		unsigned int max_threads;
 		max_threads = atoi(argv[1]);
 		float threshold_gm = atof(argv[2]);
-		string virus_samples, files_to_check;
+		string virus_samples, files_to_check, sig_temp_dir;
 		// Training malware samples
 		virus_samples.assign(argv[3]);
 		// Files to be checked and tagged as malware/benign
 		files_to_check.assign(argv[4]);
+		// Path to temp folder to store signature files
+		sig_temp_dir.assign(argv[5]);
 		SimilarityDetector *sd = new SimilarityDetector();
 		sd->SetThreshold(threshold_gm);
-		sd->CheckBinariesUsingGraphMatching(virus_samples, files_to_check, max_threads);
+		sd->CheckBinariesUsingGraphMatching(virus_samples, files_to_check, sig_temp_dir, max_threads);
 		delete(sd);
 	}
 	//
