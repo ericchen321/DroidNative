@@ -73,9 +73,9 @@ def gen_list_of_sigs(folds, dir_droidnative_bin, dir_sig, prefix, extension):
         for line in fold_benign_test_i_file:
             apk_path = line.rstrip('\n')
             apk_name = os.path.basename(apk_path)
-            year = split_path(apk_path)[5]
+            year = split_path(apk_path)[6]
             sig_folder_prefix = 'benign'
-            if "Malware" in split_path(apk_path)[4]:
+            if "Malware" in split_path(apk_path)[5]:
                 sig_folder_prefix = 'malware'
             txt_path = dir_sig + '/' + year + '/' + sig_folder_prefix + '_sig/' + apk_name + '.dex.txt.training.dat.ACFG.zip'
             samples_i_file.write(txt_path + '\n')
