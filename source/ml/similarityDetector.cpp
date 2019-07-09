@@ -630,12 +630,12 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 					printf("Loading Signature of %s\n", filename);
 					fflush(stdout);
 #endif
-#ifdef __TESTING_TIME__
-	start = clock();
-#endif
 					// loading tested sample's signatures
 					string filename_base = getBaseName(filename);
 					string testing_filename(sig_temp_dir + "/" + filename_base.substr(0, filename_base.size()-4));
+#ifdef __TESTING_TIME__
+		start = clock();
+#endif
 					vector <CFG *> cfgs = ml->LoadTestingACFGSignatures(testing_filename);
 //#define CHECK_BINARIES 1
 //#ifdef CHECK_BINARIES
@@ -654,15 +654,17 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 	cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Graph done\n";
 #endif
 #ifdef __TESTING_TIME__
-	end = clock();
-	time += (end - start);
+		end = clock();
+		time += (end - start);
 #endif
 					FileReport *fr = new FileReport();
 					fr->filename = filename;
 					fr->filenumber = filenumber;
 					fr->benign = true;
 					FileReports.push_back(fr);
-					start = clock();
+#ifdef __TESTING_TIME__
+		start = clock();
+#endif
 #ifdef __MULTI_THREAD__
 						while (THREAD_COUNT > (int)(MAX_THREADS - number_of_signatures))
 						{
@@ -675,6 +677,10 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 						}
 #endif
 					ml->BenignUsingGraphMatching(gs, cfgs, filenumber);
+#ifdef __TESTING_TIME__
+		end = clock();
+		time += (end - start);
+#endif
 #ifdef __PROGRAM_OUTPUT_ENABLED__
 					if (FileReports[filenumber]->benign)
 						printf("File %s is benign\n", filename);
@@ -715,9 +721,6 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 		else
 			cout << "Error:SimilarityDetector::CheckBinariesUsingGraphMatching: Cannot open the file: " << files_to_check << "\n";
 
-#ifdef __TESTING_TIME__
-		start = clock();
-#endif
 #ifdef __MULTI_THREAD__
 		while (MANAGER_THREAD_COUNT > 0)
 		{
@@ -728,10 +731,6 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 			cerr << "Waiting: MANAGER_THREAD_COUNT: " << dec << MANAGER_THREAD_COUNT << endl;
 #endif
 		}
-#endif
-#ifdef __TESTING_TIME__
-		end = clock();
-		time += (end - start);
 #endif
 
 #ifdef __PRINT_REPORT__
@@ -759,8 +758,6 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 		delete (ml);
 
 #ifdef __TESTING_TIME__
-		end = clock();
-		time += (end - start);
 		total_testing_time = ((double)(time))/CLOCKS_PER_SEC;
 #endif
 
