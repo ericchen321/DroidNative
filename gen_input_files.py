@@ -9,13 +9,15 @@
 
 import glob
 import sys
+import random
 
 if(len(sys.argv)!=6):
-	print "Wrong arguments, please check comments in the script for usage"
-	sys.exit(1)
+  print("Wrong arguments, please check comments in the script for usage")
+  sys.exit(1)
 
 benignInDir = sys.argv[1] + '/*'
 malwareInDir = sys.argv[2] + '/*'
+num_samples = int(sys.argv[3])
 benignSamples = glob.glob(benignInDir)
 malwareSamples = glob.glob(malwareInDir)
 
@@ -28,13 +30,10 @@ if(sys.argv[3] == 'all'):
     outFile.write(line)
     outFile.write("\n")
 else:
-  count = 0
+  benignSamples = random.sample(benignSamples, num_samples)
   for line in benignSamples:
     outFile.write(line)
     outFile.write("\n")
-    count += 1
-    if(count == int(sys.argv[3])):
-      break
 outFile.close()
 
 outFile = open(malwareOut, 'w')
@@ -43,11 +42,8 @@ if(sys.argv[4] == 'all'):
     outFile.write(line)
     outFile.write("\n")
 else:
-  count = 0
+  malwareSamples = random.sample(malwareSamples, num_samples)
   for line in malwareSamples:
     outFile.write(line)
     outFile.write("\n")
-    count += 1
-    if(count == int(sys.argv[4])):
-      break
 outFile.close()
