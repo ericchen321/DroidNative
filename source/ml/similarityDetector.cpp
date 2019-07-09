@@ -677,9 +677,9 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 					ml->BenignUsingGraphMatching(gs, cfgs, filenumber);
 #ifdef __PROGRAM_OUTPUT_ENABLED__
 					if (FileReports[filenumber]->benign)
-						printf("File %s is benign\n\n", filename);
+						printf("File %s is benign\n", filename);
 					else
-						printf("File %s is/contain malware\n\n", filename);
+						printf("File %s is/contain malware\n", filename);
 					fflush(stdout);
 #endif
 					filenumber++;
@@ -696,7 +696,7 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 					// remove decompressed signature file
 					string remove_command("rm " + testing_filename);
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-					std::cout << "Removing signature file: " << remove_command << endl;
+					std::cout << "Removing signature file: " << remove_command << "\n" << endl;
 #endif
 					system(remove_command.c_str());
 #endif
