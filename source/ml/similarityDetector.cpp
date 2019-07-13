@@ -503,6 +503,10 @@ void SimilarityDetector::LoadMalwareSignatures(string virus_samples, string sig_
 				// iterate over malware samples listed in virus_samples, load their signatures to ml
 				if ( (c < 3*MAX_FILENAME) && (fileBufferP[n] == '\n' || fileBufferP[n] == '\r') )
 				{
+#ifdef __TESTING_TIME__
+		clock_t start = 0, end = 0;
+		double malware_load_sig_time = 0;
+#endif
 					filename[c] = '\0';
 	#ifdef __DEBUG__
 					cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Checking file: " << filename << "\n";
@@ -525,7 +529,16 @@ void SimilarityDetector::LoadMalwareSignatures(string virus_samples, string sig_
 					// load in malware signature
 					string filename_base = getBaseName(filename);
 					string testing_filename(sig_temp_dir + "/" + filename_base.substr(0, filename_base.size()-4));
+#ifdef __TESTING_TIME__
+		start = clock();
+#endif
 					ml->LoadMalwareACFGSignatures(testing_filename);
+#ifdef __TESTING_TIME__
+		end = clock();
+		malware_load_sig_time = end - start;
+		double malware_load_sig_time_sec = malware_load_sig_time/CLOCKS_PER_SEC;
+		std::cerr << "Malware Signature Loading Time for " << testing_filename << ": " << malware_load_sig_time_sec << " seconds" << endl;
+#endif
 
 					// remove decompressed signature file
 					string remove_command("rm " + testing_filename);
@@ -609,6 +622,11 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 				if ( (c < 3*MAX_FILENAME) && (fileBufferP[n] == '\n' || fileBufferP[n] == '\r') )
 				{
 					filename[c] = '\0';
+#ifdef __TESTING_TIME__
+		clock_t start_per_file = 0, end_per_file = 0;
+		double testing_time_per_file = 0;
+#endif
+
 #ifdef __DEBUG__
 					cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Checking file: " << filename << "\n";
 #endif
@@ -636,6 +654,9 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #ifdef __TESTING_TIME__
 		start = clock();
 #endif
+#ifdef __TESTING_TIME__
+		start_per_file = clock();
+#endif
 					vector <CFG *> cfgs = ml->LoadTestingACFGSignatures(testing_filename);
 //#define CHECK_BINARIES 1
 //#ifdef CHECK_BINARIES
@@ -657,6 +678,11 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 		end = clock();
 		time += (end - start);
 #endif
+#ifdef __TESTING_TIME__
+		end_per_file = clock();
+		testing_time_per_file += end_per_file - start_per_file;
+#endif
+
 					FileReport *fr = new FileReport();
 					fr->filename = filename;
 					fr->filenumber = filenumber;
@@ -664,6 +690,9 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 					FileReports.push_back(fr);
 #ifdef __TESTING_TIME__
 		start = clock();
+#endif
+#ifdef __TESTING_TIME__
+		start_per_file = clock();
 #endif
 #ifdef __MULTI_THREAD__
 						while (THREAD_COUNT > (int)(MAX_THREADS - number_of_signatures))
@@ -680,6 +709,12 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #ifdef __TESTING_TIME__
 		end = clock();
 		time += (end - start);
+#endif
+#ifdef __TESTING_TIME__
+		end_per_file = clock();
+		testing_time_per_file += end_per_file - start_per_file;
+		double testing_time_per_file_sec = testing_time_per_file/CLOCKS_PER_SEC;
+		std::cerr << "Testing time for " << testing_filename << ": " << testing_time_per_file_sec << " seconds" << endl;
 #endif
 #ifdef __PROGRAM_OUTPUT_ENABLED__
 					if (FileReports[filenumber]->benign)
@@ -769,6 +804,7 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 #ifdef __TESTING_TIME__
 	printf("Total Testing (matching each signature with all signatures) time: %15.5f second(s)\n", total_testing_time);
+	std::cerr << "Total Testing (matching each signature with all signatures) time: " << total_testing_time << " seconds" << endl;
 #endif
 }
 
