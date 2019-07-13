@@ -537,7 +537,7 @@ void SimilarityDetector::LoadMalwareSignatures(string virus_samples, string sig_
 		end = clock();
 		malware_load_sig_time = end - start;
 		double malware_load_sig_time_sec = malware_load_sig_time/CLOCKS_PER_SEC;
-		std::cerr << "Malware Signature Loading Time for " << testing_filename << ": " << malware_load_sig_time_sec << " seconds" << endl;
+		std::cerr << "Malware signature loading time for " << testing_filename << ": " << malware_load_sig_time_sec << " seconds" << endl;
 #endif
 
 					// remove decompressed signature file
@@ -588,6 +588,8 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #ifdef __TESTING_TIME__
 	end = clock();
 	time += end - start;
+	double sig_loading_time_total_sec = time/CLOCKS_PER_SEC;
+	std:cerr << "Total malware signatures loading time: " << sig_loading_time_total_sec << " seconds" << endl;
 #endif
 #ifdef __PROGRAM_OUTPUT_ENABLED__
 	cout << "--------------------------------------------------------------------\n";
