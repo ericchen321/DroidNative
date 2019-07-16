@@ -537,7 +537,22 @@ void SimilarityDetector::LoadMalwareSignatures(string virus_samples, string sig_
 		end = clock();
 		malware_load_sig_time = end - start;
 		double malware_load_sig_time_sec = malware_load_sig_time/CLOCKS_PER_SEC;
-		std::cerr << "Malware signature loading time for " << testing_filename << ": " << malware_load_sig_time_sec << " seconds" << endl;
+		ifstream malware_sig_file(testing_filename.c_str(), ifstream::in | ifstream::binary);
+		if(malware_sig_file.is_open())
+    	{
+			malware_sig_file.seekg(0, ios::end);
+    		long malware_sig_file_size = malware_sig_file.tellg();
+			double malware_sig_file_size_MB = (double)malware_sig_file_size / 1048576.0;
+    		malware_sig_file.close();
+			std::cerr << std::fixed;
+    		std::cerr << std::setprecision(4);
+        	std::cerr << "malware signature size and loading time," << testing_filename << "," << malware_sig_file_size_MB << "," << malware_load_sig_time_sec << endl;
+    	}
+		else{
+			std::cerr << std::fixed;
+    		std::cerr << std::setprecision(4);
+			std::cerr << "malware signature size and loading time," << testing_filename << ","  << "," << malware_load_sig_time_sec << endl;
+		}
 #endif
 
 					// remove decompressed signature file
@@ -589,7 +604,7 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 	end = clock();
 	time += end - start;
 	double sig_loading_time_total_sec = time/CLOCKS_PER_SEC;
-	std:cerr << "Total malware signatures loading time: " << sig_loading_time_total_sec << " seconds" << endl;
+	std:cerr << "Total malware signatures loading time," << "," << "," << sig_loading_time_total_sec << endl;
 #endif
 #ifdef __PROGRAM_OUTPUT_ENABLED__
 	cout << "--------------------------------------------------------------------\n";
@@ -716,7 +731,22 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 		end_per_file = clock();
 		testing_time_per_file += end_per_file - start_per_file;
 		double testing_time_per_file_sec = testing_time_per_file/CLOCKS_PER_SEC;
-		std::cerr << "Testing time for " << testing_filename << ": " << testing_time_per_file_sec << " seconds" << endl;
+		ifstream testing_sig_file(testing_filename.c_str(), ifstream::in | ifstream::binary);
+		if(testing_sig_file.is_open())
+    	{
+			testing_sig_file.seekg(0, ios::end);
+    		long testing_sig_file_size = testing_sig_file.tellg();
+			double testing_sig_file_size_MB = (double)testing_sig_file_size / 1048576.0;
+    		testing_sig_file.close();
+			std::cerr << std::fixed;
+    		std::cerr << std::setprecision(4);
+        	std::cerr << "testing signature size and loading time," << testing_filename << "," << testing_sig_file_size_MB << "," << testing_time_per_file_sec << endl;
+    	}
+		else{
+			std::cerr << std::fixed;
+    		std::cerr << std::setprecision(4);
+			std::cerr << "testing signature size and loading time," << testing_filename << ","  << "," << testing_time_per_file_sec << endl;
+		}
 #endif
 #ifdef __PROGRAM_OUTPUT_ENABLED__
 					if (FileReports[filenumber]->benign)
@@ -806,7 +836,7 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 #ifdef __TESTING_TIME__
 	printf("Total Testing (matching each signature with all signatures) time: %15.5f second(s)\n", total_testing_time);
-	std::cerr << "Total Testing (matching each signature with all signatures) time: " << total_testing_time << " seconds" << endl;
+	std::cerr << "Total Testing (matching each signature with all signatures) time," << "," << "," << total_testing_time << endl;
 #endif
 }
 

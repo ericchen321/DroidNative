@@ -31,6 +31,7 @@
 #include "../include/swod.h"
 #include <stdlib.h>
 #include <string.h>
+#include <fstream>
 
 typedef struct
 {

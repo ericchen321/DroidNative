@@ -99,7 +99,7 @@ def run_droidnative_testing(fold_count):
     files_to_check_name = 'files_to_check_' + ('%02d' % fold_count) + '.txt'
     sig_temp_dir = 'sig_temp_' + ('%02d' % fold_count)
     result_name = 'results_' + ('%02d' % fold_count) + '.txt'
-    timing_name = 'timing_' + ('%02d' % fold_count) + '.txt'
+    timing_name = 'timing_' + ('%02d' % fold_count) + '.csv'
     os.system('mkdir ' + sig_temp_dir)
     os.system("./DroidNative-ACFG.exe" + ' 0 ' + str(threshold) + ' ' + virus_samples_name + ' ' + files_to_check_name + ' ' + sig_temp_dir + ' > ' + result_name + ' 2>' + timing_name)
     os.system('rm -rf ' + sig_temp_dir)
