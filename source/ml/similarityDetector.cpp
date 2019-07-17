@@ -790,9 +790,9 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 #ifdef __PROGRAM_OUTPUT_ENABLED__
 					if (FileReports[filenumber]->benign)
-						printf("File %s is benign\n\n", filename);
+						printf("File %s is benign\n", filename);
 					else
-						printf("File %s is/contain malware\n\n", filename);
+						printf("File %s is/contain malware\n", filename);
 					fflush(stdout);
 #endif
 					filenumber++;
