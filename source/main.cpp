@@ -117,6 +117,20 @@ int main(int argc, char **argv, char **envp)
 		delete(sd);
 	}
 	//
+	// For graph signature (ACFG) matching, load training signatures into
+	// a single training model file
+	//
+	else if (argc == 5){
+		unsigned int max_threads;
+		max_threads = atoi(argv[1]);
+		string training_sigs_filename = argv[2];
+		string training_data_filename = argv[3];
+		string sig_temp_dir = argv[4];
+		SimilarityDetector *sd = new SimilarityDetector();
+		sd->SaveSignaturesToModel(training_sigs_filename, training_data_filename, sig_temp_dir, max_threads);
+		delete(sd);
+	}
+	//
 	// For graph signature (ACFG) matching, but build signatures only
 	//
 	else if (argc == 4)

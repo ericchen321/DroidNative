@@ -82,6 +82,9 @@
 
 #define SIGNATURE_FILE_EXTENSION                     "training.dat"
 
+#define UNZIP_STATUS_NO_ERROR						0
+#define SSHPASS_STATUS_NO_ERROR						0
+
 /*
  * Forward declarations
  */

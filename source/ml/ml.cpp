@@ -130,7 +130,7 @@ void ML::SaveACFGSignatures(string filename)
  * any of the signatures match those already loaded
  *
  */
-uint64_t ML::LoadMalwareACFGSignatures(string filename){
+uint64_t ML::LoadMalwareACFGSignaturesPerSample(string filename){
 	vector<Block *> blocks;
 	vector<BackEdge *> backEdges;
 	CFG *_cfg = new CFG(blocks, backEdges, filename);
@@ -174,7 +174,6 @@ uint64_t ML::LoadMalwareACFGSignatures(string filename){
  */
 uint64_t ML::LoadACFGSignatures(string filename)
 {
-	/* do not remove existing signatures
 	for (int i = 0; i < SignaturesACFG.size(); i++)
 		delete (SignaturesACFG[i]);
 	for (int i = 0; i < SignaturesGraph.size(); i++)
@@ -183,7 +182,6 @@ uint64_t ML::LoadACFGSignatures(string filename)
 	SignaturesACFG.clear();
 	SignaturesGraph.erase(SignaturesGraph.begin(), SignaturesGraph.end());
 	SignaturesGraph.clear();
-	*/
 
 	vector<Block *> blocks;
 	vector<BackEdge *> backEdges;
