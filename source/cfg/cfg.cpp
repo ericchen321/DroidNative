@@ -153,7 +153,7 @@ vector<CFG *> CFG::ReadFromFile(string filename)
 	ifstream file(filename.c_str(), ios::in | ios::binary | ios::ate);
 	if (file.is_open())
 	{
-		unsigned int fileSize = (unsigned int)file.tellg();                // How much buffer we need for the file
+		long fileSize = (long)file.tellg();                // How much buffer we need for the file
 		file.seekg (0, ios::beg);
 		char *fileBuffer = new char[fileSize+1];
 		file.read(fileBuffer, fileSize);                                   // Read the file into the buffer
@@ -384,7 +384,7 @@ vector<CFG *> CFG::ReadFromFile(string filename)
 	ifstream file(filename.c_str(), ios::in | ios::binary | ios::ate);
 	if (file.is_open())
 	{
-		unsigned int fileSize = (unsigned int)file.tellg();                // How much buffer we need for the file
+		long fileSize = (long)file.tellg();                // How much buffer we need for the file
 		file.seekg (0, ios::beg);
 		char *fileBuffer = new char[fileSize+1];
 		file.read(fileBuffer, fileSize);                                   // Read the file into the buffer
