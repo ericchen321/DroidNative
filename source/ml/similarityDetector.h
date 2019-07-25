@@ -74,7 +74,7 @@ public:
 	~SimilarityDetector();
 	void SetSizeSWOD(float vwod, float hwod, float threshold_vwod, float threshold_hwod, float threshold_vsd, float threshold_hsd);
 	void SetThreshold(float threshold_gm);
-	void CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, string sig_temp_dir, unsigned int max_threads);
+	void CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, string sig_temp_dir, string sig_file_path, unsigned int max_threads);
 	void CheckBinariesUsingSignatureMatching(string malware_samples, string benign_samples, string virus_samples, string files_to_check, unsigned int max_threads);
 	void GenerateSignatures(string sample, int max_threads, string sig_dir);
 	void SaveSignaturesToModel(string training_sigs_filename, string training_data_filename, string sig_temp_dir, unsigned int max_threads);

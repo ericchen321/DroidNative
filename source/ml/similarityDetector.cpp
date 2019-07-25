@@ -613,7 +613,7 @@ void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_sa
  *
  * ------------------------------------------------------------------------------------------------------
  */
-void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, string sig_temp_dir, unsigned int max_threads)
+void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, string files_to_check, string sig_temp_dir, string sig_file_path, unsigned int max_threads)
 {
 #ifdef __TESTING_TIME__
 	clock_t start = 0, end = 0;
@@ -622,12 +622,11 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 
 		ML *ml = new ML(max_threads, THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING);
-		string virus_samples_training_data_filename(virus_samples + "." + SIGNATURE_FILE_EXTENSION + ".ACFG");
-		ifstream training_data_file(virus_samples_training_data_filename.c_str(), ios::in | ios::binary | ios::ate);
+		ifstream training_data_file(sig_file_path.c_str(), ios::in | ios::binary | ios::ate);
 		if(training_data_file.is_open()){
 			training_data_file.close();
-			cout << "Loading training model from " << virus_samples_training_data_filename << "..." << endl;
-			LoadMalwareSignaturesFromTrainingModel(virus_samples_training_data_filename, ml);
+			cout << "Loading training model from " << sig_file_path << "..." << endl;
+			LoadMalwareSignaturesFromTrainingModel(sig_file_path, ml);
 		}
 		else{
 			cout << "Training model not found. Generating training model from individual signature file..." << endl;
