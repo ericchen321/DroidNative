@@ -15,7 +15,7 @@ source_dir = sys.argv[1]
 dest_dir = sys.argv[2]
 num_samples = int(sys.argv[3])
 
-samples = glob.glob(os.path.join(source_dir, '*.apk'))
+samples = glob.glob(os.path.join(source_dir, '*'))
 samples = random.sample(samples, num_samples)
 
 os.system('rm ' + dest_dir + '/*')
