@@ -481,9 +481,9 @@ void SimilarityDetector::BuildGraphs(ML *ml, char *filename, char *fileBuffer, u
  */
 void SimilarityDetector::LoadMalwareSignaturesFromTrainingModel(string virus_samples_training_data_filename, ML* ml){
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-	cout << "--------------------------------------------------------------------\n";
-	cout << "Train Data Using Graph Matching . . .\nTraining model file: " << virus_samples_training_data_filename << " . . .\n";
-	cout << "--------------------------------------------------------------------\n";
+	cerr << "--------------------------------------------------------------------\n";
+	cerr << "Train Data Using Graph Matching . . .\nTraining model file: " << virus_samples_training_data_filename << " . . .\n";
+	cerr << "--------------------------------------------------------------------\n";
 #endif
 		ml->LoadACFGSignatures(virus_samples_training_data_filename);
 }
@@ -492,9 +492,9 @@ void SimilarityDetector::LoadMalwareSignaturesFromTrainingModel(string virus_sam
  */
 void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_samples, string sig_temp_dir, ML* ml){
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-	cout << "--------------------------------------------------------------------\n";
-	cout << "Train Data Using Graph Matching . . .\nVirus sample file: " << virus_samples << " . . .\n";
-	cout << "--------------------------------------------------------------------\n";
+	cerr << "--------------------------------------------------------------------\n";
+	cerr << "Train Data Using Graph Matching . . .\nVirus sample file: " << virus_samples << " . . .\n";
+	cerr << "--------------------------------------------------------------------\n";
 #endif
 		/*
 		* Open binary file for reading with the file pointer pointing at the end (ate)
@@ -540,14 +540,14 @@ void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_sa
 					strcat(unzip_command, " -d ");
 					strcat(unzip_command, sig_temp_dir.c_str());
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-					std::cout << "Unzipping signature file: " << unzip_command << endl;
+					std::cerr << "Unzipping signature file: " << unzip_command << endl;
 #endif
 					int cmd_status = system(unzip_command);
 					if(cmd_status == UNZIP_STATUS_NO_ERROR){
-						std::cout << "File unzipped successfully" << endl;
+						std::cerr << "File unzipped successfully" << endl;
 					}
 					else{
-						std::cout << "File unzipping failed; status code: " << cmd_status << endl;
+						std::cerr << "File unzipping failed; status code: " << cmd_status << endl;
 					}
 
 					// load in malware signature
@@ -568,21 +568,21 @@ void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_sa
     		long malware_sig_file_size = malware_sig_file.tellg();
 			double malware_sig_file_size_MB = (double)malware_sig_file_size / 1048576.0;
     		malware_sig_file.close();
-			std::cerr << std::fixed;
-    		std::cerr << std::setprecision(4);
-        	std::cerr << "malware signature size and loading time," << testing_filename << "," << malware_sig_file_size_MB << "," << malware_load_sig_time_sec << endl;
+			std::cout << std::fixed;
+    		std::cout << std::setprecision(4);
+        	std::cout << "malware signature size and loading time," << testing_filename << "," << malware_sig_file_size_MB << "," << malware_load_sig_time_sec << endl;
     	}
 		else{
-			std::cerr << std::fixed;
-    		std::cerr << std::setprecision(4);
-			std::cerr << "malware signature size and loading time," << testing_filename << ","  << "," << malware_load_sig_time_sec << endl;
+			std::cout << std::fixed;
+    		std::cout << std::setprecision(4);
+			std::cout << "malware signature size and loading time," << testing_filename << ","  << "," << malware_load_sig_time_sec << endl;
 		}
 #endif
 
 					// remove decompressed signature file
 					string remove_command("rm " + testing_filename);
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-					std::cout << "Removing signature file: " << remove_command << endl;
+					std::cerr << "Removing signature file: " << remove_command << endl;
 #endif
 					system(remove_command.c_str());
 
@@ -599,7 +599,7 @@ void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_sa
 			delete (fileBufferP);
 		}
 		else
-			cout << "Error:SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles: Cannot open the file: " << virus_samples << "\n";
+			cerr << "Error:SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles: Cannot open the file: " << virus_samples << "\n";
 }
 
 /*
@@ -625,11 +625,11 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 		ifstream training_data_file(sig_file_path.c_str(), ios::in | ios::binary | ios::ate);
 		if(training_data_file.is_open()){
 			training_data_file.close();
-			cout << "Loading training model from " << sig_file_path << "..." << endl;
+			cerr << "Loading training model from " << sig_file_path << "..." << endl;
 			LoadMalwareSignaturesFromTrainingModel(sig_file_path, ml);
 		}
 		else{
-			cout << "Training model not found. Generating training model from individual signature file..." << endl;
+			cerr << "Training model not found. Generating training model from individual signature file..." << endl;
 			LoadMalwareSignaturesFromSignatureFiles(virus_samples, sig_temp_dir, ml);
 		}
 
@@ -637,12 +637,12 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 	end = clock();
 	time += end - start;
 	double sig_loading_time_total_sec = time/CLOCKS_PER_SEC;
-	std::cerr << "Total malware signatures loading time," << "," << "," << sig_loading_time_total_sec << endl;
+	std::cout << "Total malware signatures loading time," << "," << "," << sig_loading_time_total_sec << endl;
 #endif
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-	cout << "--------------------------------------------------------------------\n";
-	cout << "Check Binaries Using Graph Matching . . .\nFiles to check file: " << files_to_check << " . . .\n";
-	cout << "--------------------------------------------------------------------\n";
+	cerr << "--------------------------------------------------------------------\n";
+	cerr << "Check Binaries Using Graph Matching . . .\nFiles to check file: " << files_to_check << " . . .\n";
+	cerr << "--------------------------------------------------------------------\n";
 #endif
 
 		/*
@@ -691,22 +691,21 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 					strcat(unzip_command, " -d ");
 					strcat(unzip_command, sig_temp_dir.c_str());
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-					std::cout << "Unzipping signature file: " << unzip_command << endl;
+					std::cerr << "Unzipping signature file: " << unzip_command << endl;
 #endif
 					int cmd_status = system(unzip_command);
 					if(cmd_status == UNZIP_STATUS_NO_ERROR){
-						std::cout << "File unzipped successfully" << endl;
+						std::cerr << "File unzipped successfully" << endl;
 					}
 					else{
-						std::cout << "File unzipping failed; status code: " << cmd_status << endl;
+						std::cerr << "File unzipping failed; status code: " << cmd_status << endl;
 					}
-#ifdef __PROGRAM_OUTPUT_ENABLED__
-					printf("Loading Signature of %s\n", filename);
-					fflush(stdout);
-#endif
 					// loading tested sample's signatures
 					string filename_base = getBaseName(filename);
 					string testing_filename(sig_temp_dir + "/" + filename_base.substr(0, filename_base.size()-4));
+#ifdef __PROGRAM_OUTPUT_ENABLED__
+					cerr << "Loading Signature of " << testing_filename << endl;
+#endif
 #ifdef __TESTING_TIME__
 		start = clock();
 #endif
@@ -777,24 +776,18 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
     		long testing_sig_file_size = testing_sig_file.tellg();
 			double testing_sig_file_size_MB = (double)testing_sig_file_size / 1048576.0;
     		testing_sig_file.close();
-			std::cerr << std::fixed;
-    		std::cerr << std::setprecision(4);
-        	std::cerr << "testing signature size and loading time," << testing_filename << "," << testing_sig_file_size_MB << "," << testing_time_per_file_sec << endl;
+			std::cout << std::fixed;
+    		std::cout << std::setprecision(4);
+        	std::cout << "testing signature size and loading time and is/not benign," << testing_filename << "," << testing_sig_file_size_MB << "," << testing_time_per_file_sec  << "," << FileReports[filenumber]->benign << endl;
     	}
 		else{
-			std::cerr << std::fixed;
-    		std::cerr << std::setprecision(4);
-			std::cerr << "testing signature size and loading time," << testing_filename << ","  << "," << testing_time_per_file_sec << endl;
+			std::cout << std::fixed;
+    		std::cout << std::setprecision(4);
+			std::cout << "testing signature size and loading time and is/not benign," << testing_filename << ","  << "," << testing_time_per_file_sec << endl;
 		}
 #endif
-#ifdef __PROGRAM_OUTPUT_ENABLED__
-					if (FileReports[filenumber]->benign)
-						printf("File %s is benign\n", filename);
-					else
-						printf("File %s is/contain malware\n", filename);
-					fflush(stdout);
-#endif
 					filenumber++;
+					delete fr;
 #ifdef __DEBUG__
 						cerr << "SimilarityDetector::CheckBinariesUsingGraphMatching: Done\n";
 #endif
@@ -808,7 +801,7 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 					// remove decompressed signature file
 					string remove_command("rm " + testing_filename);
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-					std::cout << "Removing signature file: " << remove_command << "\n" << endl;
+					std::cerr << "Removing signature file: " << remove_command << "\n" << endl;
 #endif
 					system(remove_command.c_str());
 #endif
@@ -822,10 +815,10 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 				else
 					c = 0;
 			}
-			delete (fileBufferP);
+			delete[] fileBufferP;
 		}
 		else
-			cout << "Error:SimilarityDetector::CheckBinariesUsingGraphMatching: Cannot open the file: " << files_to_check << "\n";
+			cerr << "Error:SimilarityDetector::CheckBinariesUsingGraphMatching: Cannot open the file: " << files_to_check << "\n";
 
 #ifdef __MULTI_THREAD__
 		while (MANAGER_THREAD_COUNT > 0)
@@ -840,6 +833,7 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 
 #ifdef __PRINT_REPORT__
+		/*
 		cout << endl;
 		cout << "--------------------------------------------------------------------\n";
 		cout << "|                                                                  |\n";
@@ -859,6 +853,7 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 			printf ("%180s %7d %5.2f %5d\n", FileReports[f]->filename.c_str(), (int)FileReports[f]->filenumber, FileReports[f]->simscore, (int)FileReports[f]->benign);
 		}
 		printf("\nSize of THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING = %5.5f\n", THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING);
+		*/
 #endif
 
 		delete (ml);
@@ -866,15 +861,16 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #ifdef __TESTING_TIME__
 		total_testing_time = ((double)(time))/CLOCKS_PER_SEC;
 #endif
-
+/*
 #ifdef __ASSIGNING_WEIGHT_TIME__
 	printf("Total Assigning Weights time:                                     %15.5f second(s)\n", total_assigning_weight_time);
 #endif
 #ifdef __TRAINING_TIME__
 	printf("Total Training (building all signatures) time:                    %15.5f second(s)\n", total_training_time);
 #endif
+*/
 #ifdef __TESTING_TIME__
-	printf("Total Testing (matching each signature with all signatures) time: %15.5f second(s)\n", total_testing_time);
+	// printf("Total Testing (matching each signature with all signatures) time: %15.5f second(s)\n", total_testing_time);
 	std::cerr << "Total Testing (matching each signature with all signatures) time," << "," << "," << total_testing_time << endl;
 #endif
 }

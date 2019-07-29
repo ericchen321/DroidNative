@@ -62,8 +62,8 @@ ML::ML(uint32_t max_threads, double THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING)
 		MAX_THREADS = MAX_THREADS_LIMIT;
 
 #ifdef __PROGRAM_OUTPUT_ENABLED__
-	cout << "Number of CPUs available: " << numCPU << endl;
-	cout << "Number of maximum threads: " << MAX_THREADS << endl;
+	cerr << "Number of CPUs available: " << numCPU << endl;
+	cerr << "Number of maximum threads: " << MAX_THREADS << endl;
 #endif
 }
 
@@ -87,11 +87,12 @@ ML::~ML()
 	SignaturesGraph.erase(SignaturesGraph.begin(), SignaturesGraph.end());
 	SignaturesGraph.clear();
 
+	/*
 	for (int f = 0; f < (int)FileReports.size(); f++)
 		delete (FileReports[f]);
 	FileReports.erase(FileReports.begin(), FileReports.end());
 	FileReports.clear();
-
+	*/
 #ifdef __WIN32__
 	DeleteCriticalSection(&cs);
 	DeleteCriticalSection(&cs_m);
@@ -161,7 +162,7 @@ uint64_t ML::LoadMalwareACFGSignaturesPerSample(string filename){
 			SignaturesGraph.push_back(g);
 		}
 	}
-	printf("%d Signatures loaded\n", (int)SignaturesACFG.size());
+	cerr << (int)SignaturesACFG.size() << " Signatures loaded" << endl;
 
 	delete (isom);
 	return (SignaturesACFG.size());
@@ -197,7 +198,7 @@ uint64_t ML::LoadACFGSignatures(string filename)
 		SignaturesACFG.push_back(cfg);
 		SignaturesGraph.push_back(g);
 	}
-	printf("%d Signatures loaded\n", (int)SignaturesACFG.size());
+	cerr << (int)SignaturesACFG.size() << " Signatures loaded" << endl;
 
 	delete (isom);
 	return (SignaturesACFG.size());
@@ -624,10 +625,10 @@ void ML::BenignUsingGraphMatching(vector <Graph *> gs, vector <CFG *> cfgs, uint
 			if (percentageCount >= THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING_PASSED)
 			{
 #ifdef __PROGRAM_CFG_TRACING_OUTPUT_ENABLED__
-				printf("Testing file (%s)\n", FileReports[filenumber]->filename.c_str());
+				cerr << "Testing file " << FileReports[filenumber]->filename << endl;
 				CFG *cfg_training = SignaturesACFG[s];
-				printf("Training file %s\n", cfg_training->GetFilename().c_str());
-				printf("Sim score: %f percent\n", FileReports[filenumber]->simscore);
+				cerr << "Training file " << cfg_training->GetFilename() << endl;
+				cerr << "Sim score: " << FileReports[filenumber]->simscore << " percent" << endl;
 #endif
 				FileReports[filenumber]->benign = false;
 #ifdef __DEBUG__
