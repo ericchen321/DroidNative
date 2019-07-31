@@ -531,12 +531,12 @@ void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_sa
 	#endif
 					// unzip the compressed signature file to current dir
 					char unzip_command[3*MAX_FILENAME+7];
-					strcpy(unzip_command, "unzip -q -j ");
+					strcpy(unzip_command, "unzip -o -q -j ");
 					int i;
 					for(i=0; filename[i] != '\0'; i++){
-						unzip_command[i+12] = filename[i];
+						unzip_command[i+15] = filename[i];
 					}
-					unzip_command[i+12] = '\0';
+					unzip_command[i+15] = '\0';
 					strcat(unzip_command, " -d ");
 					strcat(unzip_command, sig_temp_dir.c_str());
 #ifdef __PROGRAM_OUTPUT_ENABLED__
@@ -682,12 +682,12 @@ void SimilarityDetector::CheckBinariesUsingGraphMatching(string virus_samples, s
 #endif
 					// unzip the compressed signature file to current dir
 					char unzip_command[3*MAX_FILENAME+7];
-					strcpy(unzip_command, "unzip -q -j ");
+					strcpy(unzip_command, "unzip -o -q -j ");
 					int i;
 					for(i=0; filename[i] != '\0'; i++){
-						unzip_command[i+12] = filename[i];
+						unzip_command[i+15] = filename[i];
 					}
-					unzip_command[i+12] = '\0';
+					unzip_command[i+15] = '\0';
 					strcat(unzip_command, " -d ");
 					strcat(unzip_command, sig_temp_dir.c_str());
 #ifdef __PROGRAM_OUTPUT_ENABLED__
