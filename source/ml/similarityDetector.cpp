@@ -144,7 +144,7 @@ void SimilarityDetector::TrainDataUsingSignatureMatching(string filenameP, ML *m
 			else
 				c = 0;
 		}
-		delete (fileBufferP);
+		delete[] fileBufferP;
 	}
 	else
 		cout << "Error:SimilarityDetector::TrainDataUsingSignatureMatching:  Cannot open the file: " << filenameP << "\n";
@@ -338,7 +338,7 @@ void SimilarityDetector::CheckBinariesUsingSignatureMatching(string malware_samp
 				else
 					c = 0;
 			}
-			delete (fileBufferP);
+			delete[] fileBufferP;
 		}
 		else
 			cout << "Error:SimilarityDetector::CheckBinariesUsingSignatureMatching: Cannot open the file: " << files_to_check << "\n";
@@ -596,7 +596,7 @@ void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_sa
 				else
 					c = 0;
 			}
-			delete (fileBufferP);
+			delete[] fileBufferP;
 		}
 		else
 			cout << "Error:SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles: Cannot open the file: " << virus_samples << "\n";
