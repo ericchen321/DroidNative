@@ -502,7 +502,7 @@ void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_sa
 		ifstream fileP(virus_samples.c_str(), ios::in | ios::binary | ios::ate);
 		if (fileP.is_open())
 		{
-			unsigned int fileSize = (unsigned int)fileP.tellg();                // How much buffer we need for the file
+			uint64_t fileSize = (uint64_t)fileP.tellg();                // How much buffer we need for the file
 			fileP.seekg (0, ios::beg);
 			char *fileBufferP = new char[fileSize+1];
 			fileP.read(fileBufferP, fileSize);                                  // Read the file into the buffer
@@ -516,7 +516,7 @@ void SimilarityDetector::LoadMalwareSignaturesFromSignatureFiles(string virus_sa
 			if ((int)number_of_signatures > MAX_THREADS)
 				number_of_signatures = 0;
 			uint32_t filenumber = 0;
-			for (unsigned int n = 0; n < fileSize; n++)
+			for (uint64_t n = 0; n < fileSize; n++)
 			{
 				// iterate over malware samples listed in virus_samples, load their signatures to ml
 				if ( (c < 3*MAX_FILENAME) && (fileBufferP[n] == '\n' || fileBufferP[n] == '\r') )
