@@ -1,20 +1,24 @@
 # Usage:
 # 1st param: path to result file
-# 2nd param: if all samples are benign, then True, otherwise False
+# 2nd param: path to parsed csv result file path
+# 3rd param: if all samples are benign, then True, otherwise False
 
 import sys
 
 result_file_path = sys.argv[1]
-are_all_benign = sys.argv[2]
+parsed_result_file_path = sys.argv[2]
+are_all_benign = sys.argv[3]
 
+parsed_result_file = open(parsed_result_file_path, 'w')
 result_file = open(result_file_path, 'r')
 sample_count = 0
 malware_count = 0
 for line in result_file:
-    if ('File /nfs/home2' in line):
+    if (('File /nfs/home2/guanxiong/signatures' in line) or ('File /home/ubuntu/i0y0b/signatures' in line) or ('File ~/signatures' in line)):
         sample_count += 1
         if ('is/contain malware' in line):
             malware_count += 1
+        
 result_file.close()
 
 print("Result file analyzed: " + result_file_path)
