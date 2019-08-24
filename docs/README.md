@@ -23,6 +23,8 @@ DroidNative analyzes samples in either native binary format or disassembled huma
 - ```` lib ````               - DIR:  The library required to build and run DroidNative
 
 - ```` source ````             - DIR:  Source of DroidNative
+
+- ```` docs ````              -DIR: documentation on pre-processing apk samples and running DroidNative
 - ```` build.pl ````          - FILE: Perl script to build DroidNative
 - ```` Makefile-ACFG ````     - FILE: Makefile for ACFG
 - ```` Makefile-SWOD ````      - FILE: Makefile for SWOD
