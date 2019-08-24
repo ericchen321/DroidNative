@@ -1,5 +1,5 @@
 ------------------------------------------------
-# README file for using DroidNative to Extract Features from APK Samples
+# README file for using DroidNative to Extract Features from OAT-TXT Samples
 ------------------------------------------------
 
 Author:
