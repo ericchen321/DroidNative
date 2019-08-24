@@ -40,7 +40,7 @@ There are eight DroidNative testing experiments. You can see the details of each
 
 ## PROCEDURE TO SET UP DROIDNATIVE FOR TESTING
 
-1. Set up VMs. You can use VirtualBox or Virsh (with virt-manager being its GUI management tool) to create new VMs. VirtualBox utilizes KVM, and some Android emulators also use KVM, so you may not run them together on a host. In that case you will have to use Vish. Once you have started a VM, ssh into it.
+1. Set up VMs. You can use VirtualBox or Virsh (with virt-manager being its GUI management tool) to create new VMs. VirtualBox utilizes KVM, and some Android emulators also use KVM, so you may not run them together on a host. In that case you will have to use Vish. Once you have started a VM, ssh into it: the username for all VMs is ``` ubuntu ``` and password is ``` f ```.
 
 2. Mount host directories with DroidNative executable, signature files to the VMs.
 
