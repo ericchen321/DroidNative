@@ -1,11 +1,11 @@
 ------------------------------------------------
-# README file for pre-processing APK samples 
+# README file for Pre-processing APK Samples 
 ------------------------------------------------
 
 Author:
 - Guanxiong Chen chenguanxiong@alumni.ubc.ca
 
-DroidNative does not process apk samples directly; instead it requires ART (Android Runtime) to convert dex files in an apk sample to a single oat-txt file first, then build signatures of the sample using the oat-txt file. This document explains how to convert apk samples to oat-txt format on our servers.
+DroidNative does not process apk samples directly; instead it requires ART (Android Runtime) to convert dex files in an apk sample to a single oat-txt file first, then it builds signatures of the sample using the oat-txt file. This document explains how to convert apk samples to oat-txt format on our servers.
 
 ART is part of an Android Operation System, so you can use ART by either running an Android emulator (on-device), or building Android from source (on-host). Either way, the conversion process is divided into two steps: 1. using ART tool ```` dex2oat ```` to convert an apk sample to non-human-readable oat file; 2. using ART tool ```` oatdump ```` to convert the output file from the previous step to a human-readable text file.
 
@@ -13,9 +13,9 @@ From a script provided by Ryan Riley, one of DroidNative's authors (https://gist
 - They used the on-host option for batch production;
 - They used ART in Android 5.1.1_r4 to convert their samples
   
-So we also used the on-host option with Android 5.1.1_r4 for preprocessing.
+So we also used the on-host option with Android 5.1.1_r4 for pre-processing.
 
-This documentation explains where our already-produced oat-txt files are produced, and procedure to produce oat-txt files.
+This documentation explains where our already-produced oat-txt files are stored, and procedure to produce oat-txt files.
 
 ## ALREADY-PRODUCED OAT-TXT FILES (Updated by Aug 23, 2019)
 
