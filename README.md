@@ -2,6 +2,10 @@
 # README file for building and running DroidNative
 ------------------------------------------------
 
+Authors: 
+- Shahid Alam alam_shahid@yahoo.com
+- Guanxiong Chen chenguanxiong@alumni.ubc.ca
+
 Malware writers are applying stealthy mutations (obfuscations) to create malware variants, that are difficult to detect statically by current signature based detectors. DroidNative uses specific control flow patterns to reduce the effect of obfuscations, provides automation and platform independence, and unlike other Android anti-malwares, operates at the Android native code level, allowing it to detect malware embedded in both native code and bytecode.
 
 ## A very high level overview of DroidNative:
@@ -10,13 +14,14 @@ The native (binary) code is disassembled and translated into MAIL (Malware Analy
 
 DroidNative is written in C/C++ (50,000+ lines of code including comments) and requires perl, GNU make, gcc and g++ (with stdlib) for building. It is build and tested on Windows (cygwin) and Linux (Ubuntu) systems.
 
+DroidNative analyzes samples in either native binary format or disassembled human-readable text format. So you need to preprocess your apk samples first. This documentation explains only using DroidNative analyze preprocessed samples.  
 
 ## Directories and files:
 
-- ````bin ````               - DIR:  DroidNative binaries (DroidNative-ACFG, DroidNative-SWOD and DroidNative-Only-MAIL) and perl scripts for running them
+- ````bin ````               - DIR:  DroidNative binaries (DroidNative-ACFG, DroidNative-SWOD and DroidNative-Only-MAIL), perl scripts for running them, training models, experiment results
+
 - ```` lib ````               - DIR:  The library required to build and run DroidNative
-- ```` run ````               - DIR:  Sub-directories to run DroidNative for different sizes of dataset
-- ```` samples ````            - DIR:  Malware and benign samples. These are real malware samples, therefore exclude this DIR from AV scanning for testing
+
 - ```` source ````             - DIR:  Source of DroidNative
 - ```` build.pl ````          - FILE: Perl script to build DroidNative
 - ```` Makefile-ACFG ````     - FILE: Makefile for ACFG
@@ -27,72 +32,67 @@ DroidNative is written in C/C++ (50,000+ lines of code including comments) and r
 
 ## BUILDING:
 
-The build.pl script will build DroidNative binaries in the bin DIR.
+The build.pl script will build DroidNative binaries in the bin DIR. For our paper since we are only using DroidNative-ACFG, we are not building DroidNative-SWOD.
+- Usage:
+   ```` 
+  perl build.pl
+  ````
 
 
 ## RUNNING:
 
-For running DroidNative change to the run DIR and then to the respective sub-DIR, such as dataset-40-40 for running with the dataset of 40 malware and 40 benign samples. Use the following scripts to run the respective binary for n-fold cross validation and building ROC and timings for the respective run.
+For running DroidNative change to the ````bin```` DIR, then run the ````DroidNative-ACFG.exe```` executable. Our DroidNative-ACFG provides the following running modes:
 
-1. run-cross-validation_ACFG.pl
+1. Generating ACFG signature file for one sample
 - USAGE:
   ```` 
-  run-cross-validation.pl <max_threads> <n> <file_name_benign_samples> <file_name_malware_samples> <file_name_DroidNative> <build_roc=0/1> <THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING> 
+  ./DroidNative-ACFG.exe 0 <directory to store signatures> <path to compressed oat-txt file (must be in the bin directory)> > <path to signature generation log file>
   ````
-build_roc = 0 Just run once
-build_roc = 1 Run more than once, from THRESHOLD_FOR_MALWARE_SAMPLE_GRAPH_MATCHING - 100 for building ROC
+
 - EXAMPLE:
   ```` 
-  run-cross-validation.pl 1 10 benign_samples.txt malware_samples.txt DroidNative.exe 1 1 
+  ./DroidNative-ACFG.exe 0 /nfs/home2/guanxiong/signatures/2018/malware_sig /data/guanxiong/DroidNative/bin/sample_malware.apk.dex.txt.zip > sample_malware.apk.siggen.log
   ````
-- NOTE:
-- DroidNative saves the training data to a file ```` <file_name_malware_samples>.training.dat ```` to save time. Next time when it is run with the same file name ```` <file_name_malware_samples> ```` it will try to load the saved training data from the file ```` <file_name_malware_samples>.training.dat ```` and if the file is not present only then it's going to train the data. DroidNative distinguishes the saved training data by the filename. If your training data does not change, then use the same file name that was used when building the training data. But if your training data has changed then you need to use a file with different name.
-For the input files, each line must end with the new-line character.
+- NOTE: After program execution a compressed signature file will be produced under the ````bin```` directory. The file contains all CFGs extracted from the given sample. After running the example command you should see the file ````sample_malware.apk.dex.txt.training.dat.ACFG.zip```` being produced. In this directory you should also see ```` sample_malware.apk.siggen.log ```` which contains information on if unzipping was successfull, number of CFGs extracted, etc.
 
-2. run-cross-validation_SWOD.pl
+2. Generating ACFG signature file (training model) from multiple malware samples
 - USAGE:
   ```` 
-  run-cross-validation.pl <n> <file_name_benign_samples> <file_name_malware_samples> <file_name_DroidNative> <find_best_value=0/1/2> <VWOD> <HWOD> <VSD> <HSD> 
+  ./DroidNative-ACFG.exe 0 <name of the training model file> <path to text file with list of per sample compressed signatures> <directory where signatures are decompressed to> > <path to training result file> 2><path to timing information file> 
   ````
-find_best_value = 0 for generating ROC,
-find_best_value = 1 for one run,
-find_best_value = 2 For finding the best values.
+
 - EXAMPLE:
   ```` 
-  run-cross-validation.pl 10 benign_samples.txt malware_samples.txt DroidNative.exe 1 3 50 25 50 
+  ./DroidNative-ACFG.exe 0 virus_samples.txt.training.dat.ACFG virus_samples.txt sig_temp > training_result.txt 2>training_timing.csv
   ````
-- NOTE:
-For the input files, each line must end with the new-line character.
+- NOTE: In the example above, ```` virus_samples.txt ```` contains a list of signature files generated from each oat-txt sample. Its content looks like this:
+  ````
+  /nfs/home2/guanxiong/signatures/2018/malware_sig/sample_0.apk.dex.txt.training.dat.ACFG.zip
+  /nfs/home2/guanxiong/signatures/2018/malware_sig/sample_1.apk.dex.txt.training.dat.ACFG.zip
 
-3. build-ROC.pl
-- USAGE:
   ```` 
-  build-ROC.pl <path to result files> <n> <range> 
+  If you want to make this file yourself, make sure each line ends with a new-line character. You should see the training model file, ````virus_samples.txt.training.dat.ACFG```` under ````bin```` DIR after program execution. The directory where signature files are decompressed to, ````sig_temp```` in this example should be created before executing the command. You can pick a different directory though. We need this parameter because if we were running multiple DroidNative-ACFG threads in the same ````bin```` directory without a decompression space for each, and they happened to decompress the same signature file, they would try overwrite each other's decompressed files. The file ````training_result.txt```` contains information of whether each sample's signature file is loaded successfully, number of CFGs loaded from each sample, etc. ```` training_timing.csv ```` lists the time it takes to load CFGs per sample, and the size of each signature file.
+
+3. Testing
+- NOTE: Two ways to do testing: a) loading in a pre-existing training model, then test or b) building a training model from multiple samples first, then test. Using b) is not recommended because it does not produce a training model after training is done. So if a testing thread crashes, the training progress would be lost.
+  
+- USAGE (Method 3a):
+  ````
+  ./DroidNative-ACFG.exe 0 <threshold> <doesn't matter what you put in here> <path to text file with list of samples' signatures to test> <directory where signatures are decompressed to> <path to training model file> > <path to testing result file> 2><path to timing information file>  
+  ````
+- EXAMPLE:
+  ````
+  ./DroidNative-ACFG.exe 0 70 whatever files_to_check.txt sig_temp virus_samples.txt.training.dat.ACFG > testing_results.txt 2>testing_timing.csv
   ````
 
-4. getTime.pl
-- USAGE:
-  ```` 
-  getTime.pl <path to result files> <n> <range> 
-  ````
+- NOTE: In the example above, DroidNative-ACFG will load all CFGs from ```` virus_samples.txt.training.dat.ACFG ````, then test CFGs of each sample in ```` files_to_check.txt```` against CFGs loaded from the training sample, and write if the sample is benign/malicious and its similarity score in ````testing_results.txt````. Format of ````files_to_check.txt```` is the same as ````virus_samples.txt```` from the command example in Section 2, except this time the samples listed are to be tested.
 
-For example, to carry out 5-fold cross validation with the dataset of 40 malware and 40 benign samples using ACFG technique:
-````
-$ cd run/dataset-40-40
-$ run-cross-validation.pl 1 10 benign_samples.txt malware_samples.txt DroidNative-ACFG.exe 1 1 
-````
-
-This will create all the output files with results in the current DIR and the folowing commands can be used to build the ROC and get timings from these result files.
-````
-$ build-ROC.pl ./ 5 1-100
-$ getTime.pl ./ 5 1-100
-````
-For any questions or feedback, please contact alam_shahid@yahoo.com.
+For any questions or feedback, please contact chenguanxiong@alumni.ubc.ca.
 
 
-## Miscellanous:
+## MISCELLANOUS:
 
-Two scripts are helpful for managing output files from training:
+The following scripts are useful for batch production:
 
 1. ``` move_output_files.sh ``` moves output files from ``` bin/ ```to another folder.
 - USAGE:
@@ -105,6 +105,8 @@ Two scripts are helpful for managing output files from training:
   ``` 
   ./remove_output_files.sh 
   ``` 
+
+3. ``` gen_sig_files.py ``` automates signature generation per sample. Please check the script itself for usage.
 
 ## REFERENCES:
 [1] MAIL: Malware Analysis Intermediate Language - A Step Towards Automating and Optimizing Malware Detection. In Proceedings of the Sixth ACM International Conference on Security of Information and Networks, SIN 2013.
